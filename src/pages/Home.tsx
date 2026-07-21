@@ -1,5 +1,7 @@
 import { Link } from 'react-router-dom'
+import { motion } from 'framer-motion'
 import { Zap, BookOpen, SlidersHorizontal, TrendingUp, ArrowRight } from 'lucide-react'
+import InterleaveAnimation from '../components/InterleaveAnimation'
 
 const features = [
   {
@@ -32,7 +34,12 @@ export default function Home() {
   return (
     <div className="space-y-16">
       {/* Hero Section */}
-      <section className="text-center space-y-6 py-12">
+      <motion.section
+        className="text-center space-y-6 py-12"
+        initial={{ opacity: 0, y: 24 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6, ease: 'easeOut' }}
+      >
         <div className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-4 py-1.5 text-sm text-muted-foreground">
           <Zap className="h-4 w-4 text-primary" />
           <span>电力电子设计工具</span>
@@ -62,17 +69,29 @@ export default function Home() {
             查看原理
           </Link>
         </div>
-      </section>
+      </motion.section>
 
       {/* Features Grid */}
-      <section className="grid gap-6 md:grid-cols-3">
+      <motion.section
+        className="grid gap-6 md:grid-cols-3"
+        initial="hidden"
+        whileInView="visible"
+        viewport={{ once: true, margin: '-60px' }}
+        variants={{ visible: { transition: { staggerChildren: 0.12 } } }}
+      >
         {features.map((feature) => {
           const Icon = feature.icon
           return (
-            <Link
+            <motion.div
               key={feature.path}
+              variants={{
+                hidden: { opacity: 0, y: 24 },
+                visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease: 'easeOut' } },
+              }}
+            >
+            <Link
               to={feature.path}
-              className="group rounded-xl border border-border bg-card p-6 transition-all hover:border-primary/50 hover:shadow-lg hover:shadow-primary/5"
+              className="group block h-full rounded-xl border border-border bg-card p-6 transition-all hover:border-primary/50 hover:shadow-lg hover:shadow-primary/5"
             >
               <div className={`mb-4 inline-flex rounded-lg ${feature.bg} p-3`}>
                 <Icon className={`h-6 w-6 ${feature.color}`} />
@@ -87,9 +106,25 @@ export default function Home() {
                 进入页面 <ArrowRight className="h-4 w-4" />
               </div>
             </Link>
+            </motion.div>
           )
         })}
-      </section>
+      </motion.section>
+
+      {/* 实时波形演示 */}
+      <motion.section
+        className="rounded-xl border border-border bg-card p-6 md:p-8"
+        initial={{ opacity: 0, y: 24 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, margin: '-60px' }}
+        transition={{ duration: 0.6, ease: 'easeOut' }}
+      >
+        <h2 className="text-2xl font-bold mb-2">交错导通实时演示</h2>
+        <p className="text-muted-foreground text-sm mb-6">
+          各相开关信号错相 360°/N 运行，电感电流纹波相互抵消 —— 拖动占空比或切换相数，实时观察总输入电流纹波的变化。
+        </p>
+        <InterleaveAnimation />
+      </motion.section>
 
       {/* PFC Overview */}
       <section className="rounded-xl border border-border bg-card p-8">

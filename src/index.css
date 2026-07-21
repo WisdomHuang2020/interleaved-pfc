@@ -206,3 +206,18 @@
     text-decoration: none !important;
   }
 }
+
+/* 拓扑图电流流动动画 */
+@keyframes dash-flow {
+  to {
+    stroke-dashoffset: -56;
+  }
+}
+.flow-line {
+  animation: dash-flow 1.2s linear infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .flow-line {
+    animation: none;
+  }
+}

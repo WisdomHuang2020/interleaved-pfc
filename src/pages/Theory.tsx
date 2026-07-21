@@ -1,5 +1,7 @@
 import { useState } from 'react'
 import { BookOpen, ChevronDown, ChevronUp } from 'lucide-react'
+import TopologyDiagram from '../components/TopologyDiagram'
+import InterleaveAnimation from '../components/InterleaveAnimation'
 
 interface SectionProps {
   title: string
@@ -45,18 +47,8 @@ export default function Theory() {
           </p>
           <div className="rounded-lg bg-background border border-border p-4">
             <h4 className="font-semibold text-foreground mb-2">典型2相交错并联Boost PFC</h4>
-            <div className="font-mono text-sm space-y-1">
-              <div>Vin(+) ──┬── L1 ──┬── D1 ──┬── Vout(+)</div>
-              <div>         │        │        │</div>
-              <div>         │       S1       Cout</div>
-              <div>         │        │        │</div>
-              <div>Vin(-) ──┼── L2 ──┼── D2 ──┴── Vout(-)</div>
-              <div>         │        │</div>
-              <div>         │       S2</div>
-              <div>         │        │</div>
-              <div>         └────────┘</div>
-            </div>
-            <p className="mt-3 text-xs">S1 与 S2 的驱动信号相位差为 180°（2相）</p>
+            <TopologyDiagram />
+            <p className="mt-3 text-xs">S1 与 S2 的驱动信号相位差为 180°（2相），绿色高亮表示开关管导通</p>
           </div>
         </div>
       </CollapsibleSection>
@@ -95,6 +87,10 @@ export default function Theory() {
               其中 R(D, N) 为纹波抵消系数，与占空比 D 和相数 N 相关。
               对于2相：R(D, 2) = |2D - 1|（当 D ≤ 0.5）或 |2(1-D) - 1|（当 D &gt; 0.5）
             </p>
+          </div>
+          <div>
+            <p className="font-semibold text-foreground mb-3">实时演示：拖动占空比观察纹波抵消</p>
+            <InterleaveAnimation />
           </div>
         </div>
       </CollapsibleSection>
