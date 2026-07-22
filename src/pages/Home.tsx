@@ -1,32 +1,56 @@
 import { Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { Zap, BookOpen, SlidersHorizontal, TrendingUp, ArrowRight } from 'lucide-react'
+import { Zap, BookOpen, Activity, SlidersHorizontal, TrendingUp, PenTool, FileText, ArrowRight } from 'lucide-react'
 import InterleaveAnimation from '../components/InterleaveAnimation'
 
 const features = [
   {
     icon: BookOpen,
-    title: 'PFC 原理',
-    description: '深入了解交错并联Boost PFC的工作原理、电流纹波抵消机制与THD分析。',
-    path: '/theory',
+    title: 'PFC 基础',
+    description: '为什么需要PFC、交错并联拓扑结构，以及电流纹波抵消的核心机制。',
+    path: '/fundamentals',
     color: 'text-emerald-400',
     bg: 'bg-emerald-400/10',
   },
   {
+    icon: Activity,
+    title: '工作原理',
+    description: '四种开关模态的电流路径、交错时序，以及工频周期内占空比的变化。',
+    path: '/operation',
+    color: 'text-cyan-400',
+    bg: 'bg-cyan-400/10',
+  },
+  {
+    icon: PenTool,
+    title: '公式推导',
+    description: '从伏秒平衡到纹波抵消系数、电感电容设计与损耗估算的完整推导。',
+    path: '/derivations',
+    color: 'text-violet-400',
+    bg: 'bg-violet-400/10',
+  },
+  {
+    icon: TrendingUp,
+    title: '特性曲线',
+    description: '电感电流纹波、THD、效率等关键指标随工况变化的交互式曲线。',
+    path: '/curves',
+    color: 'text-amber-400',
+    bg: 'bg-amber-400/10',
+  },
+  {
     icon: SlidersHorizontal,
-    title: '参数设计',
+    title: '设计工具',
     description: '输入电压、输出功率、开关频率等参数，自动计算电感、电容与纹波。',
     path: '/designer',
     color: 'text-blue-400',
     bg: 'bg-blue-400/10',
   },
   {
-    icon: TrendingUp,
-    title: '特性曲线',
-    description: '可视化电感电流纹波、THD、效率等关键指标随工况变化的特性曲线。',
-    path: '/curves',
-    color: 'text-amber-400',
-    bg: 'bg-amber-400/10',
+    icon: FileText,
+    title: '报告输出',
+    description: '一键生成设计报告，支持 Markdown 下载与 PDF 打印导出。',
+    path: '/report',
+    color: 'text-rose-400',
+    bg: 'bg-rose-400/10',
   },
 ]
 
@@ -63,7 +87,7 @@ export default function Home() {
             <ArrowRight className="h-4 w-4" />
           </Link>
           <Link
-            to="/theory"
+            to="/fundamentals"
             className="inline-flex items-center gap-2 rounded-lg border border-border bg-card px-6 py-3 text-sm font-medium hover:bg-muted transition-colors"
           >
             查看原理

@@ -268,6 +268,28 @@ export default function Curves() {
           </p>
         )}
       </div>
+
+      {/* 参考图表 */}
+      <div className="rounded-xl border border-border bg-card p-6">
+        <h2 className="text-lg font-semibold mb-4">参考图表</h2>
+        <div className="grid gap-4 md:grid-cols-3">
+          {[
+            { src: 'pfc_efficiency_curve.png', alt: '效率曲线', cap: '效率随负载率变化（单相 vs 交错 N=4）' },
+            { src: 'pfc_thd_curve.png', alt: 'THD曲线', cap: 'THD 随负载率变化（含 IEC 61000-3-2 限值）' },
+            { src: 'pfc_magnetics_comparison.png', alt: '磁性元件对比', cap: '单相 vs 交错并联（4×）磁性元件体积' },
+          ].map((img) => (
+            <figure key={img.src} className="rounded-lg bg-background border border-border p-3">
+              <img
+                src={`./assets/images/${img.src}`}
+                alt={img.alt}
+                className="mx-auto rounded img-invert-dark"
+                loading="lazy"
+              />
+              <figcaption className="mt-2 text-center text-xs text-muted-foreground">{img.cap}</figcaption>
+            </figure>
+          ))}
+        </div>
+      </div>
     </div>
   )
 }

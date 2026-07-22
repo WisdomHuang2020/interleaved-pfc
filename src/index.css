@@ -17,6 +17,15 @@
   --color-border: #404040;
   --color-border-light: #525252;
 
+  /* shadcn 风格语义变量（页面中 bg-card / text-muted-foreground 等类依赖） */
+  --color-background: #0a0a0a;
+  --color-foreground: #f5f5f5;
+  --color-card: #171717;
+  --color-card-foreground: #f5f5f5;
+  --color-muted: #262626;
+  --color-muted-foreground: #a3a3a3;
+  --color-primary-foreground: #ffffff;
+
   --font-sans: 'Inter', system-ui, sans-serif;
   --font-mono: 'JetBrains Mono', monospace;
 }
@@ -177,6 +186,15 @@
     border: 1px solid #ddd !important;
     color: black !important;
   }
+  .bg-card, .bg-background {
+    background-color: white !important;
+  }
+  .text-muted-foreground {
+    color: #666 !important;
+  }
+  .border-border {
+    border-color: #ccc !important;
+  }
   table, th, td {
     border-color: #ccc !important;
   }
@@ -219,5 +237,16 @@
 @media (prefers-reduced-motion: reduce) {
   .flow-line {
     animation: none;
+  }
+}
+
+/* 暗色主题下反色显示白底波形图（matplotlib 导出） */
+.img-invert-dark {
+  filter: invert(0.94) hue-rotate(180deg) saturate(0.85);
+  border-radius: 6px;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .img-invert-dark {
+    transition: filter 0.2s ease;
   }
 }

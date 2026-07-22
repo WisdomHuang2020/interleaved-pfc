@@ -1,12 +1,15 @@
 import { useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
-import { Zap, BookOpen, SlidersHorizontal, TrendingUp, Menu, X } from 'lucide-react'
+import { Zap, BookOpen, Activity, PenTool, TrendingUp, Calculator, FileText, Menu, X } from 'lucide-react'
 
 const navItems = [
   { path: '/', label: '首页', icon: Zap },
-  { path: '/theory', label: '原理', icon: BookOpen },
-  { path: '/designer', label: '设计', icon: SlidersHorizontal },
+  { path: '/fundamentals', label: '基础', icon: BookOpen },
+  { path: '/operation', label: '原理', icon: Activity },
+  { path: '/derivations', label: '推导', icon: PenTool },
   { path: '/curves', label: '曲线', icon: TrendingUp },
+  { path: '/designer', label: '设计', icon: Calculator },
+  { path: '/report', label: '报告', icon: FileText },
 ]
 
 export default function Layout({ children }: { children: React.ReactNode }) {
