@@ -67,9 +67,10 @@ function generateThdData(): { x: number; y: number }[] {
   for (let vin = 85; vin <= 265; vin += 5) {
     const vin_dc = vin * Math.sqrt(2)
     const d = 1 - vin_dc / vout
-    const iin_avg = pout / (eta * vin_dc)
+    // 基波电流有效值 = P/(η·V_rms)，注意不能误用瞬时功率代替（参考文档公式5.1/5.3）
+    const iin_rms_fund = pout / (eta * vin)
     const delta_il = (vin_dc * d) / (l * fsw)
-    const thd = (delta_il / (2 * Math.sqrt(3))) / (iin_avg / Math.sqrt(2)) * 100
+    const thd = (delta_il / (2 * Math.sqrt(3))) / iin_rms_fund * 100
     data.push({ x: vin, y: parseFloat(Math.min(thd, 20).toFixed(2)) })
   }
   return data
@@ -96,11 +97,11 @@ function generateInductorData(): { x: number; y: number }[] {
 
   const vin_dc = vin * Math.sqrt(2)
   const d = 1 - vin_dc / vout
-  const iin_avg = pout / (eta * vin_dc)
-  const il_peak = iin_avg * Math.sqrt(2)
+  // 单相瞬时平均电流的峰值 = √2·P/(N·V_rms·η)（参考文档公式5.1/5.2）
+  const il_peak_phase = (Math.sqrt(2) * pout) / (eta * vin * n)
 
   for (let fsw = 30000; fsw <= 200000; fsw += 5000) {
-    const l = (vin_dc * d) / (rippleRatio * (il_peak / n) * fsw)
+    const l = (vin_dc * d) / (rippleRatio * il_peak_phase * fsw)
     data.push({ x: fsw / 1000, y: parseFloat((l * 1e6).toFixed(1)) })
   }
   return data

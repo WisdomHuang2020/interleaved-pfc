@@ -116,7 +116,7 @@ export default function Fundamentals() {
               loading="lazy"
             />
             <figcaption className="mt-2 text-center text-xs">
-              单相与交错并联（图示 N=4）的电感电流纹波对比：交错后总输入电流纹波 ≈ ΔIL/N
+              单相与交错并联（图示 N=4）的电感电流纹波对比：总输入纹波 = R(D,N)·ΔIL，在抵消占空比 D=k/N 处趋于零
             </figcaption>
           </figure>
         </div>

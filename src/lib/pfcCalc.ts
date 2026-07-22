@@ -63,17 +63,17 @@ export function calculatePFC(params: PFCCalcInput): PFCCalcResult {
   const i_phase_peak_max = iin_peak_max / n_phases
   const i_phase_rms = iin_rms_max / n_phases
 
-  // 占空比 (CCM模式)
-  const d_min = 1 - vin_max / vout
-  const d_max = 1 - vin_min / vout
+  // 占空比 (CCM模式, 参考文档公式2.1/2.2: D = 1 - V_in,peak/Vo, 输入为RMS值需乘√2)
+  const d_min = 1 - (Math.sqrt(2) * vin_max) / vout
+  const d_max = 1 - (Math.sqrt(2) * vin_min) / vout
 
   // 电感计算: 纹波电流为峰值电流的20%~40%, 取30%
   const ripple_ratio = 0.30
   const il_ripple_max = i_phase_peak_max * ripple_ratio
 
-  // L = V * D / (fsw * ΔIL)
-  // 在最小输入电压时纹波最大
-  const lin = (vin_min * d_max) / (fsw * il_ripple_max)
+  // L = V_in * D / (fsw * ΔIL)  (参考文档公式3.1, V_in为最低输入电压峰值=√2*vin_min)
+  // 在最低输入电压峰值处校核纹波
+  const lin = (Math.sqrt(2) * vin_min * d_max) / (fsw * il_ripple_max)
 
   // 电感峰值电流
   const il_peak = i_phase_peak_max + il_ripple_max / 2
@@ -164,9 +164,11 @@ export function phaseShiftDegrees(n_phases: number): number {
 
 /**
  * 计算输入电流THD的理论下限 (理想情况)
+ * 注意: 总输入纹波是各相纹波的时域线性叠加(峰峰值), 抵消系数为 R(D,N)=|ND-k|,
+ * 不存在 1/√N 的 RMS 叠加因子(参考文档公式4.2修订说明)。
+ * 在纹波抵消点 D=k/N 附近 R→0; 取工程上有代表性的改善上界 1/N。
  */
 export function theoreticalTHD(n_phases: number, ripple_ratio: number): number {
-  // 交错并联可显著降低THD
-  const interleaving_factor = 1 / Math.sqrt(n_phases)
+  const interleaving_factor = 1 / n_phases
   return (2 + ripple_ratio * 10) * interleaving_factor
 }

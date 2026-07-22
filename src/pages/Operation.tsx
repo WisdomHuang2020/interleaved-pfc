@@ -205,8 +205,10 @@ export default function Operation() {
             以 220Vac 输入、400V 输出为例：峰值处{' '}
             <InlineMath latex="D = 1 - 220\sqrt{2}/400 \approx 0.22" />。
             因此工频半个周期内 D 会两次扫过纹波抵消点（D = 0.5），
-            该瞬时输入纹波最小；过零点附近 D 接近 1，纹波最大，这也是 PFC
-            输入电流在过零附近畸变最明显的原因之一。
+            该瞬时总输入纹波为零。过零点附近 v_in → 0、D → 1，
+            单相纹波 <InlineMath latex="\Delta I_L = v_{in} D / (L f_{sw})" /> 同样趋于零
+            —— 过零处的电流畸变并非纹波幅值引起，而主要源于电流环带宽有限
+            与过零跟踪困难（cusp distortion），需靠控制策略改善。
           </p>
           <figure className="rounded-lg bg-background border border-border p-4">
             <img

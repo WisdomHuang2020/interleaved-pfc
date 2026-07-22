@@ -118,6 +118,12 @@ export default function Derivations() {
           </p>
           <MathBlock stepNumber={3} label="电容设计式" latex="C_{out} \ge \frac{P_{out}}{2\pi f_{line} \cdot V_{out} \cdot \Delta V_{out}}" />
           <p className="text-sm">
+            式中 <InlineMath latex="\Delta V_{out}" /> 为允许的输出纹波<strong className="text-foreground">峰峰值</strong>；
+            若按峰-谷值（峰峰值的一半）定义，则分母系数改为{' '}
+            <InlineMath latex="\pi f_{line}" />。本式假设 <InlineMath latex="\eta \approx 1" />，
+            严格计入效率时分子改为 <InlineMath latex="P_{out}/\eta" />。
+          </p>
+          <p className="text-sm">
             若还有保持时间（hold-up time）要求，则按{' '}
             <InlineMath latex="C_{out} \ge \dfrac{2 P_{out} t_{hold}}{V_{out}^2 - V_{min}^2}" />{' '}
             重新核算并取两者较大值。
@@ -153,10 +159,15 @@ export default function Derivations() {
       {/* 7. 损耗与效率 */}
       <CollapsibleSection title="7. 损耗分解与效率估算">
         <div className="space-y-2 text-muted-foreground leading-relaxed">
-          <p>每相 MOSFET 导通损耗（RDS(on) 随温度升高，按 100°C 估算）：</p>
-          <MathBlock stepNumber={1} label="开关导通损耗" latex="P_{cond,S} = I_{S,rms}^2 \cdot R_{ds(on)}, \qquad I_{S,rms} \approx I_{L,avg}\sqrt{D}" />
+          <p>每相 MOSFET 导通损耗（RDS(on) 随温度升高，按 100°C 估算）。当纹波较小（ΔIL ≪ IL,avg）时可用近似式；纹波较大时须用精确式：</p>
+          <MathBlock stepNumber={1} label="开关导通损耗" latex="P_{cond,S} = I_{S,rms}^2 \cdot R_{ds(on)}, \qquad I_{S,rms} = \sqrt{D\left(I_{L,avg}^2 + \frac{\Delta I_L^2}{12}\right)} \approx I_{L,avg}\sqrt{D}" />
           <MathBlock stepNumber={2} label="开关损耗" latex="P_{sw} = \frac{1}{2} V_{out} I_{L} (t_r + t_f) f_{sw} + E_{oss} f_{sw}" />
-          <MathBlock stepNumber={3} label="二极管损耗" latex="P_{cond,D} = I_{D,avg} \cdot V_F, \qquad I_{D,avg} \approx I_{L,avg}(1-D)" />
+          <MathBlock stepNumber={3} label="二极管损耗" latex="P_{cond,D} = I_{D,avg} \cdot V_F, \qquad I_{D,avg} = I_{L,avg}(1-D)" />
+          <p className="text-sm">
+            注意 <InlineMath latex="I_{D,avg} = I_{L,avg}(1-D)" /> 在 CCM 下是<strong className="text-foreground">精确公式</strong>：
+            二极管导通期间电流即电感电流，纹波在开关周期积分平均中自然消去，即使大纹波（BCM）也成立。
+            以上 IL,avg、ΔIL 均为对应工频时刻的瞬时值，整工频周期的总损耗还需对工频积分。
+          </p>
           <MathBlock stepNumber={4} label="电感损耗" latex="P_L = P_{cu} + P_{core} = I_{L,rms}^2 R_{dc} + k \cdot f_{sw}^{\alpha} \cdot \Delta B^{\beta} \cdot V_e" />
           <p>总效率：</p>
           <MathBlock stepNumber={5} label="效率" latex="\eta = \frac{P_{out}}{P_{out} + N\left(P_{cond,S} + P_{sw} + P_{cond,D} + P_L\right)} \times 100\%" />

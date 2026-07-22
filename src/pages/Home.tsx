@@ -169,7 +169,7 @@ export default function Home() {
             <ul className="space-y-2 text-sm text-muted-foreground">
               <li className="flex items-start gap-2">
                 <span className="mt-1 h-1.5 w-1.5 rounded-full bg-primary flex-shrink-0" />
-                输入电流纹波显著降低（理论上可抵消至单相的 1/N）
+                输入电流纹波显著降低（在 D = k/N 抵消点处理论上可降至零）
               </li>
               <li className="flex items-start gap-2">
                 <span className="mt-1 h-1.5 w-1.5 rounded-full bg-primary flex-shrink-0" />
