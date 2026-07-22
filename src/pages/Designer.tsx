@@ -45,7 +45,10 @@ interface DesignOutput {
   coutMin: number
   conductionLoss: number
   switchingLoss: number
+  diodeLoss: number
+  inductorLoss: number
   totalLoss: number
+  estimatedEfficiency: number
 }
 
 function calculateDesign(input: DesignInput): DesignOutput {
@@ -84,11 +87,19 @@ function calculateDesign(input: DesignInput): DesignOutput {
   const deltaVo = vout * 0.02
   const coutMin = pin / (2 * Math.PI * 50 * vout * deltaVo)
   
-  // Loss estimation
+  // Loss estimation (per phase, worst case at low line peak)
+  // 总损耗 = N × (开关管导通损耗 + 开关损耗 + 二极管导通损耗 + 电感铜损)
   const rdsOn = 0.05 // Assume 50mOhm MOSFET
+  const tSw = 50e-9 // 50ns switching time
+  const vfDiode = 1.5 // SiC diode forward voltage (V)
+  const rInd = 0.02 // Inductor winding resistance (Ohm)
   const conductionLoss = phases * iLrms * iLrms * rdsOn * dutyMax
-  const switchingLoss = phases * 0.5 * vout * iLpeak * (50e-9) * fsw // 50ns switching time
-  const totalLoss = conductionLoss + switchingLoss + pin * (1 - efficiency)
+  const switchingLoss = phases * 0.5 * vout * iLpeak * tSw * fsw
+  const diodeLoss = phases * vfDiode * iLpeak * (1 - dutyMax)
+  const inductorLoss = phases * iLrms * iLrms * rInd
+  const totalLoss = conductionLoss + switchingLoss + diodeLoss + inductorLoss
+  // 由器件损耗反推实际效率
+  const estimatedEfficiency = pout / (pout + totalLoss)
   
   return {
     iinRms: iinRmsMax,
@@ -104,7 +115,10 @@ function calculateDesign(input: DesignInput): DesignOutput {
     coutMin,
     conductionLoss,
     switchingLoss,
+    diodeLoss,
+    inductorLoss,
     totalLoss,
+    estimatedEfficiency,
   }
 }
 
@@ -508,9 +522,27 @@ export default function Designer() {
                       </div>
                     </div>
                     <div className="p-3 bg-surface-elevated rounded-lg">
+                      <div className="text-xs text-text-muted mb-1">二极管损耗</div>
+                      <div className="text-base font-semibold text-text-primary font-mono">
+                        {results.diodeLoss.toFixed(1)} W
+                      </div>
+                    </div>
+                    <div className="p-3 bg-surface-elevated rounded-lg">
+                      <div className="text-xs text-text-muted mb-1">电感铜损</div>
+                      <div className="text-base font-semibold text-text-primary font-mono">
+                        {results.inductorLoss.toFixed(1)} W
+                      </div>
+                    </div>
+                    <div className="p-3 bg-surface-elevated rounded-lg">
                       <div className="text-xs text-text-muted mb-1">总损耗</div>
                       <div className="text-base font-semibold text-danger font-mono">
                         {results.totalLoss.toFixed(1)} W
+                      </div>
+                    </div>
+                    <div className="p-3 bg-surface-elevated rounded-lg">
+                      <div className="text-xs text-text-muted mb-1">估算效率</div>
+                      <div className="text-base font-semibold text-success font-mono">
+                        {(results.estimatedEfficiency * 100).toFixed(1)}%
                       </div>
                     </div>
                   </div>

@@ -24,7 +24,10 @@ export interface PFCDesignResults {
   coutMin: number
   conductionLoss: number
   switchingLoss: number
+  diodeLoss: number
+  inductorLoss: number
   totalLoss: number
+  estimatedEfficiency: number
 }
 
 interface DesignContextType {

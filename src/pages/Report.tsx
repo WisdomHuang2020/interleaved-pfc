@@ -75,7 +75,10 @@ export default function Report() {
 |---|---|
 | 导通损耗 | ${fmt(results.conductionLoss, 1)} W |
 | 开关损耗 | ${fmt(results.switchingLoss, 1)} W |
+| 二极管损耗 | ${fmt(results.diodeLoss, 1)} W |
+| 电感铜损 | ${fmt(results.inductorLoss, 1)} W |
 | 总损耗 | ${fmt(results.totalLoss, 1)} W |
+| 估算效率 | ${fmt(results.estimatedEfficiency * 100, 1)}% |
 
 ## 3. 备注
 
@@ -221,7 +224,10 @@ ${notes || '（无）'}
                 ['输出', 'THD 估算', `${fmt(r.thdEstimate, 1)}%`],
                 ['损耗', '导通损耗', `${fmt(r.conductionLoss, 1)} W`],
                 ['损耗', '开关损耗', `${fmt(r.switchingLoss, 1)} W`],
+                ['损耗', '二极管损耗', `${fmt(r.diodeLoss, 1)} W`],
+                ['损耗', '电感铜损', `${fmt(r.inductorLoss, 1)} W`],
                 ['损耗', '总损耗', `${fmt(r.totalLoss, 1)} W`],
+                ['损耗', '估算效率', `${fmt(r.estimatedEfficiency * 100, 1)}%`],
               ].map(([g, k, v], i) => (
                 <tr key={i} className="border-b border-border">
                   <td className="py-2 text-text-secondary">{g}</td>
