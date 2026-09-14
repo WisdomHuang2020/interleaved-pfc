@@ -33,6 +33,11 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      # 质量门禁：lint 失败即中断，不进入构建与部署。
+      # 置于 Build 之前，确保坏代码不会上线（此前 CI 只 build 不 lint，门禁形同虚设）。
+      - name: Lint
+        run: npm run lint
+
       - name: Build
         run: npm run build
 
