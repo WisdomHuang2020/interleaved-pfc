@@ -5,3 +5,9 @@ dist/
 .env.local
 .DS_Store
 tsconfig.tsbuildinfo
+
+# 编辑器配置：本项目曾被混入无关的 C/C++ 与 STM32 配置（见 .vscode/launch.json 的 cwd）
+.vscode/
+
+# WorkBuddy 工作区元数据（记忆、技能缓存等），不属于源码
+.workbuddy/

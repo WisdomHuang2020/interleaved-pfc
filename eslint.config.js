@@ -5,6 +5,12 @@ import pluginReact from "eslint-plugin-react";
 
 /** @type {import('eslint').Linter.Config[]} */
 export default [
+  // 全局忽略：构建产物与独立子包不在根配置管辖范围内。
+  // eslint 9 的 flat config 默认只忽略 node_modules，dist/ 必须显式忽略，
+  // 否则会把压缩后的 bundle 当源码逐行报错（历史上单次报出 2539 条）。
+  // server/ 是自带 package.json 的 CommonJS 子包，用本文件的 browser globals
+  // 去检它必然误报 require/process/__dirname；若保留该子包，应为它单独立配置。
+  { ignores: ["dist/**", ".vscode/**", "server/**"] },
   {files: ["**/*.{js,mjs,cjs,ts,jsx,tsx}"]},
   {languageOptions: { globals: globals.browser }},
   {settings: { react: { version: "detect" } }},
