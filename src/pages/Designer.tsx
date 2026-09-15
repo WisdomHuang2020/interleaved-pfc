@@ -10,6 +10,8 @@ import {
   AlertTriangle,
   Info,
 } from 'lucide-react'
+import { calculateDesign } from '../lib/pfcCalc'
+import type { DesignInput } from '../lib/pfcCalc'
 
 const fadeUp = {
   hidden: { opacity: 0, y: 20 },
@@ -18,108 +20,6 @@ const fadeUp = {
     y: 0,
     transition: { delay: i * 0.1, duration: 0.5, ease: 'easeOut' as const },
   }),
-}
-
-interface DesignInput {
-  vinMin: number
-  vinMax: number
-  vout: number
-  pout: number
-  fsw: number
-  phases: number
-  efficiency: number
-  rippleTarget: number
-}
-
-interface DesignOutput {
-  iinRms: number
-  iinPeak: number
-  lBoost: number
-  lRipple: number
-  lRipplePercent: number
-  dutyMin: number
-  dutyMax: number
-  iLrms: number
-  iLpeak: number
-  thdEstimate: number
-  coutMin: number
-  conductionLoss: number
-  switchingLoss: number
-  diodeLoss: number
-  inductorLoss: number
-  totalLoss: number
-  estimatedEfficiency: number
-}
-
-function calculateDesign(input: DesignInput): DesignOutput {
-  const { vinMin, vinMax, vout, pout, fsw, phases, efficiency, rippleTarget } = input
-  
-  // Input current calculations
-  const pin = pout / efficiency
-  const iinRmsMax = pin / vinMin
-  const iinPeakMax = iinRmsMax * Math.sqrt(2)
-  
-  // Per phase current
-  const iLrms = iinRmsMax / phases
-  const iLpeak = iinPeakMax / phases
-  
-  // Duty cycle at min and max input
-  const vinMinPeak = vinMin * Math.sqrt(2)
-  const vinMaxPeak = vinMax * Math.sqrt(2)
-  const dutyMax = 1 - vinMinPeak / vout
-  const dutyMin = 1 - vinMaxPeak / vout
-  
-  // Boost inductor calculation (at min input, max duty)
-  // Delta IL = (Vin * D) / (L * fsw)
-  // Target ripple as percentage of peak current
-  const targetRipple = iLpeak * (rippleTarget / 100)
-  const lBoost = (vinMinPeak * dutyMax) / (targetRipple * fsw)
-  
-  // Actual ripple with calculated inductor
-  const lRipple = (vinMinPeak * dutyMax) / (lBoost * fsw)
-  const lRipplePercent = (lRipple / iLpeak) * 100
-  
-  // THD estimation (simplified)
-  // Higher ripple generally means higher THD
-  const thdEstimate = 2 + lRipplePercent * 0.3
-  
-  // Output capacitor (for 2% ripple at 100Hz)
-  const deltaVo = vout * 0.02
-  const coutMin = pin / (2 * Math.PI * 50 * vout * deltaVo)
-  
-  // Loss estimation (per phase, worst case at low line peak)
-  // 总损耗 = N × (开关管导通损耗 + 开关损耗 + 二极管导通损耗 + 电感铜损)
-  const rdsOn = 0.05 // Assume 50mOhm MOSFET
-  const tSw = 50e-9 // 50ns switching time
-  const vfDiode = 1.5 // SiC diode forward voltage (V)
-  const rInd = 0.02 // Inductor winding resistance (Ohm)
-  const conductionLoss = phases * iLrms * iLrms * rdsOn * dutyMax
-  const switchingLoss = phases * 0.5 * vout * iLpeak * tSw * fsw
-  const diodeLoss = phases * vfDiode * iLpeak * (1 - dutyMax)
-  const inductorLoss = phases * iLrms * iLrms * rInd
-  const totalLoss = conductionLoss + switchingLoss + diodeLoss + inductorLoss
-  // 由器件损耗反推实际效率
-  const estimatedEfficiency = pout / (pout + totalLoss)
-  
-  return {
-    iinRms: iinRmsMax,
-    iinPeak: iinPeakMax,
-    lBoost,
-    lRipple,
-    lRipplePercent,
-    dutyMin,
-    dutyMax,
-    iLrms,
-    iLpeak,
-    thdEstimate,
-    coutMin,
-    conductionLoss,
-    switchingLoss,
-    diodeLoss,
-    inductorLoss,
-    totalLoss,
-    estimatedEfficiency,
-  }
 }
 
 export default function Designer() {

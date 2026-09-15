@@ -31,6 +31,7 @@
 npm install
 npm run dev      # 启动开发服务器
 npm run lint     # ESLint 静态检查
+npm run test     # 计算库单元测试（vitest，node 环境）
 npm run build    # 类型检查 + 生产构建
 npm run preview  # 本地预览构建产物
 ```
@@ -43,8 +44,22 @@ npm run build
 
 构建输出目录为 `dist/`，使用 `./` 作为 base 路径，适配 GitHub Pages 的子路径部署。
 
-推送到 `main` 分支会触发 `.github/workflows/deploy.yml`，由 GitHub Actions 执行
-`npm ci && npm run build` 并发布到 GitHub Pages。
+推送到 `main` 分支会触发 `.github/workflows/deploy.yml`，由 GitHub Actions 依次执行
+`npm ci` → `npm run lint` → `npm run test` → `npm run build`，全部通过才发布到 GitHub Pages
+（lint 或测试失败即中断，坏代码不会上线）。
+
+### 计算库与测试
+
+`src/lib/pfcCalc.ts` 是**全站唯一的计算公式真源**（纯函数，无 React 依赖）。
+`src/pages/Designer.tsx` 与 `src/pages/Report.tsx`（经 `DesignContext`）都消费它，
+不再各自维护一份。
+
+`src/lib/pfcCalc.test.ts` 覆盖三层：不变量（功率折算、√2 关系、损耗求和、纹波率回弹等）、
+退化与非法输入的当前行为（如实记录 `Infinity`/`NaN`，不粉饰）、以及三组规格的金样快照。
+**改动任何公式前先跑 `npm run test`**；若金样失败，说明算法行为变了，需先确认是有意为之。
+
+> 注：`src/pages/Curves.tsx` 的特性曲线仍使用一套自带模型（硬编码 390V / 200µH / 65kHz /
+> 3kW / η0.96），未接入上述计算库。这是已知债务，与设计页参数不联动。
 
 ### 前端分包
 
@@ -60,7 +75,8 @@ interleaved-pfc/
 ├── package.json            # 依赖与脚本
 ├── vite.config.ts          # Vite 配置 (base: './')
 ├── eslint.config.js        # ESLint 配置
-├── tsconfig.app.json       # TypeScript 配置
+├── tsconfig.app.json       # TypeScript 配置（应用代码）
+├── tsconfig.test.json      # TypeScript 配置（测试代码，仅含 *.test.ts）
 ├── scripts/commit.sh       # 提交辅助脚本
 ├── .github/workflows/      # GitHub Pages 部署工作流
 ├── src/
@@ -77,8 +93,9 @@ interleaved-pfc/
 │   │   └── InlineMath.tsx         # KaTeX 行内公式
 │   ├── pages/              # 7 个页面，见上表
 │   └── lib/
-│       ├── DesignContext.tsx  # 设计参数全局状态
-│       └── pfcCalc.ts         # PFC 核心计算库
+│       ├── DesignContext.tsx   # 设计参数全局状态（spec / results）
+│       ├── pfcCalc.ts          # ★ 全站唯一计算公式真源
+│       └── pfcCalc.test.ts     # 计算库单元测试（vitest）
 └── public/                 # 静态资源（图片、favicon）
 ```
 

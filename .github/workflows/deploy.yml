@@ -38,6 +38,11 @@ jobs:
       - name: Lint
         run: npm run lint
 
+      # 回归门禁：计算库单测（vitest，node 环境）。失败即中断，同 lint 一样不进构建。
+      # 置于 Build 之前：算法改动的等价性靠它兜，而不是靠构建能不能过。
+      - name: Test
+        run: npm run test
+
       - name: Build
         run: npm run build
 

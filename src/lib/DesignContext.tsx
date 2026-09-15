@@ -1,4 +1,5 @@
 import { ReactNode, createContext, useContext, useState } from 'react'
+import type { DesignOutput } from './pfcCalc'
 
 export interface PFCDesignSpec {
   vinMin: number
@@ -10,25 +11,8 @@ export interface PFCDesignSpec {
   efficiency: number
 }
 
-export interface PFCDesignResults {
-  iinRms: number
-  iinPeak: number
-  lBoost: number
-  lRipple: number
-  lRipplePercent: number
-  dutyMin: number
-  dutyMax: number
-  iLrms: number
-  iLpeak: number
-  thdEstimate: number
-  coutMin: number
-  conductionLoss: number
-  switchingLoss: number
-  diodeLoss: number
-  inductorLoss: number
-  totalLoss: number
-  estimatedEfficiency: number
-}
+// 结果形状的唯一来源是计算库，这里只做别名，避免两处独立声明再次漂移。
+export type PFCDesignResults = DesignOutput
 
 interface DesignContextType {
   spec: PFCDesignSpec

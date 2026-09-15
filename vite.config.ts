@@ -17,4 +17,9 @@ export default defineConfig({
   define: {
     __APP_VERSION__: JSON.stringify(pkg.version),
   },
+  test: {
+    // 计算库是纯函数，无需 DOM；不引 jsdom，保持依赖最小
+    environment: 'node',
+    include: ['src/**/*.test.ts'],
+  },
 })

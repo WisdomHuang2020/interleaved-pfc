@@ -1,174 +1,123 @@
 /**
- * PFC Core Calculation Library
- * 交错并联Boost PFC变换器核心计算公式
+ * PFC 设计计算库 —— 全站唯一真源
+ *
+ * 历史与现状（2026-09-14 合并）：
+ * - `calculateDesign` 原为 `src/pages/Designer.tsx` 内的私有函数，是**线上真实运行的那一份**。
+ * - 本文件此前另存一套同名但数值分歧的实现（`calculatePFC` 等 6 个导出：THD 恒 7.5%、
+ *   输出电容用 `pout/vout` 而 Designer 用 `pin/vout`），**全仓库零调用点、不进 bundle**，
+ *   属"第二套实现"陷阱，已随本次合并删除。破坏性删除已由"改动前后逐字段数值比对"证明零影响。
+ * - `src/pages/Curves.tsx` 仍自带一套独立模型（硬编码 390V / 200µH / 65kHz / 3kW / η0.96，
+ *   不读 DesignContext），本次未动，作为已知债务记录在项目记忆中。
+ *
+ * 硬编码假设（改算法时须一并复核，勿当常数忽略）：
+ * - 开关管导通电阻 Rds(on) = 50 mΩ
+ * - 开关时间 t_sw = 50 ns
+ * - 二极管正向压降 Vf = 1.5 V（SiC）
+ * - 电感直流电阻 (铜损) = 0.02 Ω
+ * - 输出电压纹波目标 2%
+ * - 工频按 50 Hz 计算（输出电容按 2 倍工频纹波）
+ *
+ * 改动纪律：改本文件前先跑 `npm test`；算法改动必须附"改前改后逐字段数值比对"作为等价性证据。
  */
 
-export interface PFCCalcInput {
-  vin_min: number      // V
-  vin_max: number      // V
-  vin_nom: number      // V
-  vout: number         // V
-  pout: number         // W
-  fline: number        // Hz
-  fsw: number          // Hz
-  n_phases: number     // 相数
-  efficiency: number   // 0~1
+export interface DesignInput {
+  vinMin: number
+  vinMax: number
+  vout: number
+  pout: number
+  fsw: number
+  phases: number
+  efficiency: number
+  rippleTarget: number
 }
 
-export interface PFCCalcResult {
-  // 电流计算
-  iin_peak_max: number     // 最大输入峰值电流 (A)
-  iin_peak_nom: number      // 额定输入峰值电流 (A)
-  iin_rms_max: number       // 最大输入RMS电流 (A)
-  iin_rms_nom: number       // 额定输入RMS电流 (A)
-  // 每相电感计算
-  lin: number               // 每相Boost电感 (H)
-  il_ripple_max: number     // 最大电感电流纹波 (A)
-  il_ripple_ratio: number   // 纹波率 (0~1)
-  il_peak: number           // 电感峰值电流 (A)
-  il_rms: number            // 电感RMS电流 (A)
-  // 输出电容
-  cout: number              // 输出电容 (F)
-  vout_ripple: number       // 输出电压纹波 (V)
-  vout_ripple_ratio: number // 输出纹波率
-  // THD估算
-  thd_estimate: number      // THD估算值 (%)
-  // 占空比
-  d_min: number             // 最小占空比
-  d_max: number             // 最大占空比
-  // 功率
-  pin: number               // 输入功率 (W)
-  // 频率比
-  fsw_fline_ratio: number   // 开关频率/线频率
+export interface DesignOutput {
+  iinRms: number
+  iinPeak: number
+  lBoost: number
+  lRipple: number
+  lRipplePercent: number
+  dutyMin: number
+  dutyMax: number
+  iLrms: number
+  iLpeak: number
+  thdEstimate: number
+  coutMin: number
+  conductionLoss: number
+  switchingLoss: number
+  diodeLoss: number
+  inductorLoss: number
+  totalLoss: number
+  estimatedEfficiency: number
 }
 
-/**
- * 计算交错并联PFC关键参数
- */
-export function calculatePFC(params: PFCCalcInput): PFCCalcResult {
-  const { vin_min, vin_max, vin_nom, vout, pout, fline, fsw, n_phases, efficiency } = params
+export function calculateDesign(input: DesignInput): DesignOutput {
+  const { vinMin, vinMax, vout, pout, fsw, phases, efficiency, rippleTarget } = input
 
-  // 输入功率
+  // Input current calculations
   const pin = pout / efficiency
+  const iinRmsMax = pin / vinMin
+  const iinPeakMax = iinRmsMax * Math.sqrt(2)
 
-  // 输入峰值电流 (正弦波)
-  const iin_peak_max = (Math.sqrt(2) * pin) / vin_min
-  const iin_peak_nom = (Math.sqrt(2) * pin) / vin_nom
+  // Per phase current
+  const iLrms = iinRmsMax / phases
+  const iLpeak = iinPeakMax / phases
 
-  // 输入RMS电流
-  const iin_rms_max = pin / vin_min
-  const iin_rms_nom = pin / vin_nom
+  // Duty cycle at min and max input
+  const vinMinPeak = vinMin * Math.sqrt(2)
+  const vinMaxPeak = vinMax * Math.sqrt(2)
+  const dutyMax = 1 - vinMinPeak / vout
+  const dutyMin = 1 - vinMaxPeak / vout
 
-  // 每相电流
-  const i_phase_peak_max = iin_peak_max / n_phases
-  const i_phase_rms = iin_rms_max / n_phases
+  // Boost inductor calculation (at min input, max duty)
+  // Delta IL = (Vin * D) / (L * fsw)
+  // Target ripple as percentage of peak current
+  const targetRipple = iLpeak * (rippleTarget / 100)
+  const lBoost = (vinMinPeak * dutyMax) / (targetRipple * fsw)
 
-  // 占空比 (CCM模式, 参考文档公式2.1/2.2: D = 1 - V_in,peak/Vo, 输入为RMS值需乘√2)
-  const d_min = 1 - (Math.sqrt(2) * vin_max) / vout
-  const d_max = 1 - (Math.sqrt(2) * vin_min) / vout
+  // Actual ripple with calculated inductor
+  const lRipple = (vinMinPeak * dutyMax) / (lBoost * fsw)
+  const lRipplePercent = (lRipple / iLpeak) * 100
 
-  // 电感计算: 纹波电流为峰值电流的20%~40%, 取30%
-  const ripple_ratio = 0.30
-  const il_ripple_max = i_phase_peak_max * ripple_ratio
+  // THD estimation (simplified)
+  // Higher ripple generally means higher THD
+  const thdEstimate = 2 + lRipplePercent * 0.3
 
-  // L = V_in * D / (fsw * ΔIL)  (参考文档公式3.1, V_in为最低输入电压峰值=√2*vin_min)
-  // 在最低输入电压峰值处校核纹波
-  const lin = (Math.sqrt(2) * vin_min * d_max) / (fsw * il_ripple_max)
+  // Output capacitor (for 2% ripple at 100Hz)
+  const deltaVo = vout * 0.02
+  const coutMin = pin / (2 * Math.PI * 50 * vout * deltaVo)
 
-  // 电感峰值电流
-  const il_peak = i_phase_peak_max + il_ripple_max / 2
-
-  // 电感RMS电流 (近似)
-  const il_rms = Math.sqrt(i_phase_rms ** 2 + (il_ripple_max / Math.sqrt(12)) ** 2)
-
-  // 输出电容: 按2倍工频纹波计算
-  // C = Iout / (2 * π * fline * Vripple)
-  const iout = pout / vout
-  const vout_ripple_ratio = 0.02  // 2%输出纹波
-  const vout_ripple = vout * vout_ripple_ratio
-  const cout = iout / (2 * Math.PI * fline * vout_ripple)
-
-  // THD估算 (简化模型)
-  // 交错并联PFC的THD通常比单相低, 与纹波率相关
-  const thd_estimate = 3 + ripple_ratio * 15  // 简化估算
-
-  // 频率比
-  const fsw_fline_ratio = fsw / fline
+  // Loss estimation (per phase, worst case at low line peak)
+  // 总损耗 = N × (开关管导通损耗 + 开关损耗 + 二极管导通损耗 + 电感铜损)
+  const rdsOn = 0.05 // Assume 50mOhm MOSFET
+  const tSw = 50e-9 // 50ns switching time
+  const vfDiode = 1.5 // SiC diode forward voltage (V)
+  const rInd = 0.02 // Inductor winding resistance (Ohm)
+  const conductionLoss = phases * iLrms * iLrms * rdsOn * dutyMax
+  const switchingLoss = phases * 0.5 * vout * iLpeak * tSw * fsw
+  const diodeLoss = phases * vfDiode * iLpeak * (1 - dutyMax)
+  const inductorLoss = phases * iLrms * iLrms * rInd
+  const totalLoss = conductionLoss + switchingLoss + diodeLoss + inductorLoss
+  // 由器件损耗反推实际效率
+  const estimatedEfficiency = pout / (pout + totalLoss)
 
   return {
-    iin_peak_max,
-    iin_peak_nom,
-    iin_rms_max,
-    iin_rms_nom,
-    lin,
-    il_ripple_max,
-    il_ripple_ratio: ripple_ratio,
-    il_peak,
-    il_rms,
-    cout,
-    vout_ripple,
-    vout_ripple_ratio,
-    thd_estimate,
-    d_min,
-    d_max,
-    pin,
-    fsw_fline_ratio,
+    iinRms: iinRmsMax,
+    iinPeak: iinPeakMax,
+    lBoost,
+    lRipple,
+    lRipplePercent,
+    dutyMin,
+    dutyMax,
+    iLrms,
+    iLpeak,
+    thdEstimate,
+    coutMin,
+    conductionLoss,
+    switchingLoss,
+    diodeLoss,
+    inductorLoss,
+    totalLoss,
+    estimatedEfficiency,
   }
-}
-
-/**
- * 计算瞬时占空比 (用于特性曲线)
- * @param theta 相位角 (0 ~ π)
- * @param vin_peak 输入峰值电压
- * @param vout 输出电压
- */
-export function dutyCycle(theta: number, vin_peak: number, vout: number): number {
-  const vin_inst = vin_peak * Math.sin(theta)
-  if (vin_inst >= vout) return 0
-  return 1 - vin_inst / vout
-}
-
-/**
- * 计算瞬时电感电流纹波
- * @param theta 相位角
- * @param vin_peak 输入峰值电压
- * @param vout 输出电压
- * @param lin 电感值
- * @param fsw 开关频率
- */
-export function inductorCurrentRipple(
-  theta: number,
-  vin_peak: number,
-  vout: number,
-  lin: number,
-  fsw: number
-): number {
-  const vin_inst = vin_peak * Math.sin(theta)
-  const d = 1 - vin_inst / vout
-  return (vin_inst * d) / (lin * fsw)
-}
-
-/**
- * 计算交错并联后的等效开关频率
- */
-export function effectiveSwitchingFrequency(fsw: number, n_phases: number): number {
-  return fsw * n_phases
-}
-
-/**
- * 计算交错相移角度 (度)
- */
-export function phaseShiftDegrees(n_phases: number): number {
-  return 360 / n_phases
-}
-
-/**
- * 计算输入电流THD的理论下限 (理想情况)
- * 注意: 总输入纹波是各相纹波的时域线性叠加(峰峰值), 抵消系数为 R(D,N)=|ND-k|,
- * 不存在 1/√N 的 RMS 叠加因子(参考文档公式4.2修订说明)。
- * 在纹波抵消点 D=k/N 附近 R→0; 取工程上有代表性的改善上界 1/N。
- */
-export function theoreticalTHD(n_phases: number, ripple_ratio: number): number {
-  const interleaving_factor = 1 / n_phases
-  return (2 + ripple_ratio * 10) * interleaving_factor
 }
