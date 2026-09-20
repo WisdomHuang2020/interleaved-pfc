@@ -1,0 +1,128 @@
+name: Deploy to Tencent Lighthouse
+
+# 第二个部署目标：腾讯轻量云上的 nginx。
+# 与 deploy.yml（GitHub Pages）**并行独立**，两者互不阻塞、各自可达。
+#
+# 设计要点：
+#   1. **未配置时不报错**。若 LH_* secrets 缺失，本工作流只打印一条 notice 后跳过，
+#      不会让 main 分支出现红灯 —— 这样文件可以先合入、密钥随后再配。
+#   2. **只在配置齐备时才跑构建**，避免无意义的 CI 开销（Pages 工作流已做同一套门禁）。
+#   3. **传输用 tar over ssh**：GitHub runner 有 rsync，但为与本地部署方式保持一致
+#      （本机 Git Bash 无 rsync），统一用 tar 流，减少两套命令漂移。
+#   4. **不做删除**：产物资源名带内容哈希，旧文件不会被引用，属于惰性残留；
+#      宁可留着也不在线上执行 rm（风险不对称）。
+#
+# 所需 repository secrets：
+#   LH_HOST     服务器地址（如 150.158.164.41）
+#   LH_USER     登录用户名
+#   LH_ROOT     网站根目录绝对路径（必须等于 nginx 的 root 指令）
+#   LH_SSH_KEY  部署私钥全文（对应已装入服务器 authorized_keys 的公钥）
+#   LH_PORT     可选，SSH 端口，缺省 22
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: "lighthouse"
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # 前置判定：密钥未配置时优雅跳过，而不是让流水线变红。
+      - name: Check configuration
+        id: cfg
+        env:
+          LH_HOST: ${{ secrets.LH_HOST }}
+          LH_USER: ${{ secrets.LH_USER }}
+          LH_ROOT: ${{ secrets.LH_ROOT }}
+          LH_SSH_KEY: ${{ secrets.LH_SSH_KEY }}
+        run: |
+          if [ -z "$LH_HOST" ] || [ -z "$LH_USER" ] || [ -z "$LH_ROOT" ] || [ -z "$LH_SSH_KEY" ]; then
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+            echo "::notice title=已跳过轻量云部署::未配置 LH_HOST/LH_USER/LH_ROOT/LH_SSH_KEY，本次不上传任何文件。"
+          else
+            echo "ready=true" >> "$GITHUB_OUTPUT"
+            echo "配置齐备，将部署到 $LH_USER@$LH_HOST:$LH_ROOT"
+          fi
+
+      - name: Setup Node
+        if: steps.cfg.outputs.ready == 'true'
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        if: steps.cfg.outputs.ready == 'true'
+        run: npm ci
+
+      # 与 Pages 工作流保持同一套质量门禁，避免两条链路标准不一致。
+      - name: Lint
+        if: steps.cfg.outputs.ready == 'true'
+        run: npm run lint
+
+      - name: Test
+        if: steps.cfg.outputs.ready == 'true'
+        run: npm run test
+
+      - name: Build
+        if: steps.cfg.outputs.ready == 'true'
+        run: npm run build
+
+      - name: Deploy to server over SSH
+        if: steps.cfg.outputs.ready == 'true'
+        env:
+          LH_HOST: ${{ secrets.LH_HOST }}
+          LH_USER: ${{ secrets.LH_USER }}
+          LH_ROOT: ${{ secrets.LH_ROOT }}
+          LH_SSH_KEY: ${{ secrets.LH_SSH_KEY }}
+          LH_PORT: ${{ secrets.LH_PORT }}
+        run: |
+          set -euo pipefail
+          PORT="${LH_PORT:-22}"
+
+          mkdir -p ~/.ssh && chmod 700 ~/.ssh
+          printf '%s\n' "$LH_SSH_KEY" > ~/.ssh/lh_key
+          chmod 600 ~/.ssh/lh_key
+          ssh-keyscan -p "$PORT" -H "$LH_HOST" >> ~/.ssh/known_hosts 2>/dev/null
+
+          SSH_CMD="ssh -p $PORT -i $HOME/.ssh/lh_key -o BatchMode=yes -o ConnectTimeout=20 $LH_USER@$LH_HOST"
+
+          echo "::group::服务器环境"
+          $SSH_CMD "whoami; hostname; echo '--- web root ---'; ls -la '$LH_ROOT' | head -20"
+          echo "::endgroup::"
+
+          # 上传前先备份现有站点，留退路（失败不阻断部署）
+          $SSH_CMD "tar czf ~/webroot-backup-\$(date +%F-%H%M%S).tar.gz -C '$LH_ROOT' . 2>/dev/null || true"
+
+          # 流式上传：tar over ssh，不依赖 rsync
+          tar czf - -C dist . | $SSH_CMD "tar xzf - -C '$LH_ROOT'"
+
+      - name: Verify live site
+        if: steps.cfg.outputs.ready == 'true'
+        run: |
+          set -euo pipefail
+          # 站点用 HashRouter：路由全在 URL 片段内，服务器只需返回根目录的 index.html，
+          # 因此这里校验首页可达 + 资源引用是否为本次产物即可，无需探测子路由。
+          code=$(curl -s -o /tmp/live.html -w '%{http_code}' -m 20 https://interleavedpfc.power-knowledge.tech/)
+          echo "首页 HTTP 状态: $code"
+          [ "$code" = "200" ] || { echo "::error::首页未返回 200"; exit 1; }
+
+          echo "首页引用的资源："
+          grep -oE 'assets/index-[A-Za-z0-9_-]+\.(js|css)' /tmp/live.html | sort -u
+
+          # 与本次构建产物比对，确认真的换新了
+          LOCAL_JS=$(basename "$(ls dist/assets/index-*.js | head -1)")
+          echo "本次构建入口 JS: $LOCAL_JS"
+          if grep -q "$LOCAL_JS" /tmp/live.html; then
+            echo "::notice title=核验通过::线上入口 JS 与本次构建一致（$LOCAL_JS）"
+          else
+            echo "::warning title=核验存疑::线上入口 JS 与本次构建不一致，可能是 CDN 缓存或部署未生效"
+          fi

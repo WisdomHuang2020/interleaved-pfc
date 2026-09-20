@@ -42,11 +42,24 @@ npm run preview  # 本地预览构建产物
 npm run build
 ```
 
-构建输出目录为 `dist/`，使用 `./` 作为 base 路径，适配 GitHub Pages 的子路径部署。
+构建输出目录为 `dist/`，使用 `./` 作为 base 路径。相对路径在 **GitHub Pages 的子路径**与
+**自有域名的根路径**下都能正确解析，因此同一份产物可同时供两个目标使用，无需分叉构建。
 
-推送到 `main` 分支会触发 `.github/workflows/deploy.yml`，由 GitHub Actions 依次执行
-`npm ci` → `npm run lint` → `npm run test` → `npm run build`，全部通过才发布到 GitHub Pages
-（lint 或测试失败即中断，坏代码不会上线）。
+推送到 `main` 分支会触发两个**相互独立**的工作流，各自跑同一套质量门禁
+`npm ci` → `npm run lint` → `npm run test` → `npm run build`（lint 或测试失败即中断，
+坏代码不会上线）：
+
+| 工作流 | 部署目标 |
+|--------|----------|
+| `.github/workflows/deploy.yml` | GitHub Pages：<https://wisdomhuang2020.github.io/interleaved-pfc/> |
+| `.github/workflows/deploy-lighthouse.yml` | 腾讯轻量云 nginx：<https://interleavedpfc.power-knowledge.tech/> |
+
+轻量云链路需要配置 `LH_HOST` / `LH_USER` / `LH_ROOT` / `LH_SSH_KEY`（可选 `LH_PORT`）
+五个 repository secrets。**未配置时该工作流只打印一条 notice 后跳过，不会让流水线变红**，
+因此可以先合入文件、密钥随后再补。
+
+站点使用 `HashRouter`，路由全部位于 URL 片段中，服务器任何时候只需返回根目录的
+`index.html`——**nginx 不需要任何 `try_files` 重写规则**，静态 root 配置即可。
 
 ### 计算库与测试
 
@@ -78,7 +91,7 @@ interleaved-pfc/
 ├── tsconfig.app.json       # TypeScript 配置（应用代码）
 ├── tsconfig.test.json      # TypeScript 配置（测试代码，仅含 *.test.ts）
 ├── scripts/commit.sh       # 提交辅助脚本
-├── .github/workflows/      # GitHub Pages 部署工作流
+├── .github/workflows/      # 部署工作流（GitHub Pages + 腾讯轻量云）
 ├── src/
 │   ├── main.tsx            # 应用入口
 │   ├── App.tsx             # 路由配置与各页面的懒加载声明
