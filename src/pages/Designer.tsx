@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react'
-import { useDesign } from '../lib/DesignContext'
+import { useDesign } from '../lib/useDesign'
 import { motion } from 'framer-motion'
 import {
   Calculator,

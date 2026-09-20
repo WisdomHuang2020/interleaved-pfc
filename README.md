@@ -106,7 +106,8 @@ interleaved-pfc/
 │   │   └── InlineMath.tsx         # KaTeX 行内公式
 │   ├── pages/              # 7 个页面，见上表
 │   └── lib/
-│       ├── DesignContext.tsx   # 设计参数全局状态（spec / results）
+│       ├── DesignContext.tsx   # DesignProvider 组件（仅导出组件，供 Fast Refresh 整块热替换）
+│       ├── useDesign.ts        # 设计参数全局状态：context / useDesign / defaultSpec（spec、results）
 │       ├── pfcCalc.ts          # ★ 全站唯一计算公式真源
 │       └── pfcCalc.test.ts     # 计算库单元测试（vitest）
 └── public/                 # 静态资源（图片、favicon）

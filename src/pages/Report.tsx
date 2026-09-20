@@ -1,7 +1,7 @@
 import { useState, useRef } from 'react'
 import { Link } from 'react-router-dom'
 import { FileText, Download, Copy, Printer, Check, AlertTriangle } from 'lucide-react'
-import { useDesign } from '../lib/DesignContext'
+import { useDesign } from '../lib/useDesign'
 
 export default function Report() {
   const { spec, results } = useDesign()
