@@ -105,24 +105,63 @@ jobs:
           # 流式上传：tar over ssh，不依赖 rsync
           tar czf - -C dist . | $SSH_CMD "tar xzf - -C '$LH_ROOT'"
 
-      - name: Verify live site
+      # ⚠️ 自检步骤：**只做体检，绝不当门禁**。
+      # 2026-09-21 实测（run 35552188336）：上一步 Deploy 已 success（文件确实传上去了），
+      # 本步骤却因「境外 → 本服务器」的 TLS 握手被中间设备中断而失败
+      # （curl 在 0.62 秒内 exit 35，服务器 nginx 侧零日志），把成功的部署判成失败、让 main 变红。
+      # 因此：硬门禁只保留在第 9 步；本步骤失败只出 warning。
+      # 取证与判据见技能 github-lighthouse-deploy 的 references/pitfalls.md 第 5b / 5d 条。
+      - name: Verify live site (self-check, never blocks)
         if: steps.cfg.outputs.ready == 'true'
+        continue-on-error: true
+        env:
+          LH_HOST: ${{ secrets.LH_HOST }}
         run: |
-          set -euo pipefail
-          # 站点用 HashRouter：路由全在 URL 片段内，服务器只需返回根目录的 index.html，
-          # 因此这里校验首页可达 + 资源引用是否为本次产物即可，无需探测子路由。
-          code=$(curl -s -o /tmp/live.html -w '%{http_code}' -m 20 https://interleavedpfc.power-knowledge.tech/)
-          echo "首页 HTTP 状态: $code"
-          [ "$code" = "200" ] || { echo "::error::首页未返回 200"; exit 1; }
+          # GHA 以 `bash -e {0}` 启动，必须先显式关掉 errexit，
+          # 否则第一条命令失败就中止、后面的诊断全打不出来。
+          set +e
+          set -uo pipefail
+          DOMAIN=interleavedpfc.power-knowledge.tech
+          URL="https://$DOMAIN/"
+          LIVE=/tmp/live.html
 
-          echo "首页引用的资源："
-          grep -oE 'assets/index-[A-Za-z0-9_-]+\.(js|css)' /tmp/live.html | sort -u
+          echo "::group::runner 侧 DNS 视图"
+          getent hosts "$DOMAIN" || echo "(getent 无结果)"
+          echo "::endgroup::"
 
-          # 与本次构建产物比对，确认真的换新了
-          LOCAL_JS=$(basename "$(ls dist/assets/index-*.js | head -1)")
-          echo "本次构建入口 JS: $LOCAL_JS"
-          if grep -q "$LOCAL_JS" /tmp/live.html; then
-            echo "::notice title=核验通过::线上入口 JS 与本次构建一致（$LOCAL_JS）"
-          else
-            echo "::warning title=核验存疑::线上入口 JS 与本次构建不一致，可能是 CDN 缓存或部署未生效"
+          # curl 的**退出码**与 **HTTP 状态码**是两件事：连接失败时 -w 给的是 000，
+          # 退出码才是 35。必须分别打印，否则 exit 35 会被误读成「返回了非 200」。
+          ok=0
+          for i in 1 2 3; do
+            code=$(curl -sS -o "$LIVE" -w '%{http_code}' -m 20 "$URL"); rc=$?
+            echo "第 ${i} 次请求：http=$code curl_exit=$rc"
+            if [ "$rc" = 0 ] && [ "$code" = "200" ]; then ok=1; break; fi
+            sleep 5
+          done
+
+          # 域名走不通时，用 --resolve 钉到 IP 再试一次：**SNI 仍是域名**，
+          # 所以这次成功=纯 DNS 问题、这次也失败=TLS 路径问题，两者可分。
+          # `${LH_HOST:-}`：set -u 下未定义会中断脚本，必须给默认值。
+          if [ "$ok" != 1 ] && [ -n "${LH_HOST:-}" ]; then
+            code=$(curl -sS -o "$LIVE" -w '%{http_code}' -m 20 \
+                   --resolve "$DOMAIN:443:$LH_HOST" "$URL"); rc=$?
+            echo "改走 IP（SNI 不变）：http=$code curl_exit=$rc"
           fi
+
+          if [ "$ok" = 1 ]; then
+            echo "首页引用的资源："
+            grep -oE 'assets/index-[A-Za-z0-9_-]+\.(js|css)' "$LIVE" | sort -u || true
+            LOCAL_JS=$(basename "$(ls dist/assets/index-*.js | head -1)")
+            echo "本次构建入口 JS: $LOCAL_JS"
+            if grep -q "$LOCAL_JS" "$LIVE"; then
+              echo "::notice title=核验通过::线上入口 JS 与本次构建一致（$LOCAL_JS）"
+            else
+              echo "::warning title=核验存疑::线上入口 JS 与本次构建不一致，可能是 CDN 缓存或部署未生效"
+            fi
+          else
+            echo "::warning title=自检未通过（不影响本次部署）::域名多次访问均失败。"
+            echo "部署是否生效以第 9 步 Deploy 为硬门禁；此处失败请核对线上产物。"
+            echo "—— 失败现场（curl -v 末尾 30 行）——"
+            curl -v -sS -o /dev/null -m 20 "$URL" 2>&1 | tail -n 30 || true
+          fi
+          exit 0
