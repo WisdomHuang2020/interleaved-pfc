@@ -11,6 +11,18 @@ name: Deploy to Tencent Lighthouse
 #      （本机 Git Bash 无 rsync），统一用 tar 流，减少两套命令漂移。
 #   4. **不做删除**：产物资源名带内容哈希，旧文件不会被引用，属于惰性残留；
 #      宁可留着也不在线上执行 rm（风险不对称）。
+#   5. **拒绝降级部署**：上传前把本次产物的 package.json 版本，与服务器上的
+#      版本哨兵 `$LH_ROOT/.deployed-version` 比对；产物**严格早于**线上即中止。
+#      成因见下方案例，版本哨兵在上传成功后写入。
+#
+# ⚠️ 为什么要有第 5 条（2026-09-21 实际事故）：
+#   旧 run 35552188336（sha c6f328f = v0.3.12）在 11:56:08 被**重跑**，
+#   它的 Deploy 步把 v0.3.12 的 dist 重新解包**覆盖**了 11:52 刚部署的 v0.3.13，
+#   线上入口 index.html 被改回指向旧 bundle（线上实际退回 v0.3.12），
+#   而该 run 最后只因自检步 exit 35 才标记 failure —— 「失败的绿色部署」比红灯更危险。
+#   注意 concurrency 无法阻止这种情况：旧 run 在**新 run 之后**才启动，无冲突可取消。
+#   残余缺口：重跑**加护栏之前**的旧 run（其工作流定义不含本检查）仍能绕过，
+#   所以真正的第一道防线仍是「不要重跑旧的部署 run，要重部署就 dispatch 当前 main」。
 #
 # 所需 repository secrets：
 #   LH_HOST     服务器地址（如 150.158.164.41）
@@ -99,11 +111,38 @@ jobs:
           $SSH_CMD "whoami; hostname; echo '--- web root ---'; ls -la '$LH_ROOT' | head -20"
           echo "::endgroup::"
 
+          # ---------- 降级护栏（上传前） ----------
+          ART_VER=$(node -p "require('./package.json').version")
+          LIVE_VER=$($SSH_CMD "cat '$LH_ROOT/.deployed-version' 2>/dev/null || true" \
+                     | tr -d '\r\n' | head -c 64)
+          echo "本次产物版本 : $ART_VER"
+          echo "线上已部署版本: ${LIVE_VER:-（无记录）}"
+
+          if [ -n "$LIVE_VER" ]; then
+            if [ "$LIVE_VER" = "$ART_VER" ]; then
+              echo "版本相同，按允许的重复部署处理。"
+            else
+              OLDEST=$(printf '%s\n%s\n' "$LIVE_VER" "$ART_VER" | sort -V | head -1)
+              if [ "$OLDEST" = "$ART_VER" ]; then
+                echo "::error title=拒绝降级部署::本次产物 $ART_VER 严格早于线上 $LIVE_VER，已中止以免覆盖线上较新版本。"
+                echo "若确需回滚，请手工在服务器上操作，并同步更新 $LH_ROOT/.deployed-version。"
+                exit 1
+              fi
+              echo "产物较新（$ART_VER > $LIVE_VER），允许部署。"
+            fi
+          else
+            echo "::warning title=无线上版本记录::服务器 $LH_ROOT/.deployed-version 不存在（首次启用护栏），本次跳过降级检查。"
+          fi
+
           # 上传前先备份现有站点，留退路（失败不阻断部署）
           $SSH_CMD "tar czf ~/webroot-backup-\$(date +%F-%H%M%S).tar.gz -C '$LH_ROOT' . 2>/dev/null || true"
 
           # 流式上传：tar over ssh，不依赖 rsync
           tar czf - -C dist . | $SSH_CMD "tar xzf - -C '$LH_ROOT'"
+
+          # 上传成功后写入版本哨兵，供下一次部署做降级比对
+          $SSH_CMD "printf '%s\n' '$ART_VER' > '$LH_ROOT/.deployed-version'"
+          echo "已写入版本哨兵：$LH_ROOT/.deployed-version = $ART_VER"
 
       # ⚠️ 自检步骤：**只做体检，绝不当门禁**。
       # 2026-09-21 实测（run 35552188336）：上一步 Deploy 已 success（文件确实传上去了），
