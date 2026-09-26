@@ -25,7 +25,7 @@ name: Deploy to Tencent Lighthouse
 #   所以真正的第一道防线仍是「不要重跑旧的部署 run，要重部署就 dispatch 当前 main」。
 #
 # 所需 repository secrets：
-#   LH_HOST     服务器地址（如 150.158.164.41）
+#   LH_HOST     服务器地址（43.142.148.37；2026-09-26 由源机 150.158.164.41 迁来，源机 10-19 到期）
 #   LH_USER     登录用户名
 #   LH_ROOT     网站根目录绝对路径（必须等于 nginx 的 root 指令）
 #   LH_SSH_KEY  部署私钥全文（对应已装入服务器 authorized_keys 的公钥）
