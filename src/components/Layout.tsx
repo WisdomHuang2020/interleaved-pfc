@@ -92,6 +92,17 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       <footer className="border-t border-border py-6 text-center text-sm text-muted-foreground">
         <p>交错并联PFC设计工具 v{__APP_VERSION__}</p>
         <p className="mt-1">基于 React + Vite + Tailwind CSS</p>
+        {/* ICP 备案号：工信部要求网站底部展示并链接至 beian.miit.gov.cn */}
+        <p className="mt-1">
+          <a
+            href="https://beian.miit.gov.cn/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="transition-colors hover:text-foreground"
+          >
+            苏ICP备2026073104号
+          </a>
+        </p>
       </footer>
     </div>
   )
