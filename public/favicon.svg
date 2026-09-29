@@ -1,5 +1,21 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
-  <rect width="100" height="100" rx="16" fill="#2563eb"/>
-  <path d="M30 65 L50 25 L70 65" stroke="white" stroke-width="6" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-  <circle cx="50" cy="72" r="6" fill="white"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <!--
+    交错并联 Boost PFC 设计工具 —— favicon
+    语义取自本站真源图标 Waves（与主入口站 sites.json 的 icon、
+    本站页头 logo 一致），造型落到"交错并联"的核心视觉上：
+      两条相位错开的电感电流波 —— 上波为波峰时下波恰为波谷,
+      这正是 interleaved 的本质(纹波相互抵消)。
+    配色遵循站群统一规范: 深底 #0a0a0a / teal #14b8a6 主线 / amber #f59e0b 仅标关键点。
+    amber 不参与形体勾勒, 只落在两波交汇的过零处(代表纹波抵消点)。
+    16px 可读性: 两条粗曲线上下分离、各自单峰,
+      与 AHB 的直角脉冲、LLC 的谐振尖峰在标签页尺寸下即可区分。
+  -->
+  <rect width="32" height="32" rx="6" fill="#0a0a0a"/>
+  <!-- 上波：中间凸起，两端回落 -->
+  <path d="M4.5 12.5 C 9 12.5, 10.5 7, 16 7 C 21.5 7, 23 12.5, 27.5 12.5"
+        fill="none" stroke="#14b8a6" stroke-width="2.6" stroke-linecap="round"/>
+  <!-- 下波：与上波反相，中间凹陷 -->
+  <path d="M4.5 19.5 C 9 19.5, 10.5 25, 16 25 C 21.5 25, 23 19.5, 27.5 19.5"
+        fill="none" stroke="#14b8a6" stroke-width="2.6" stroke-linecap="round"/>
+  <circle cx="16" cy="16" r="1.9" fill="#f59e0b"/>
 </svg>
