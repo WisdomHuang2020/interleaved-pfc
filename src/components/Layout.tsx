@@ -100,7 +100,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             rel="noopener noreferrer"
             className="transition-colors hover:text-foreground"
           >
-            苏ICP备2026073104号
+            苏ICP备2026073104号-1
           </a>
         </p>
         {/* 免责声明：分「工程决策」与「知识产权」两段，与站群其余站点保持同一文本。
