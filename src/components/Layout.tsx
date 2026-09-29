@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
-import { Zap, BookOpen, Activity, PenTool, TrendingUp, Calculator, FileText, Menu, X, Waves } from 'lucide-react'
+import { Zap, BookOpen, Activity, PenTool, TrendingUp, Calculator, FileText, Menu, X } from 'lucide-react'
+import BrandMark from './BrandMark'
 
 const navItems = [
   { path: '/', label: '首页', icon: Zap },
@@ -22,7 +23,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       <header className="sticky top-0 z-50 border-b border-border bg-background/80 backdrop-blur-md">
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4">
           <Link to="/" className="flex items-center gap-2 text-lg font-semibold text-primary">
-            <Waves className="h-6 w-6" />
+            <BrandMark className="h-6 w-6" />
             <span>交错并联PFC</span>
           </Link>
 
