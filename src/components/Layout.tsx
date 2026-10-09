@@ -93,8 +93,11 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       <footer className="border-t border-border py-6 text-center text-sm text-muted-foreground">
         <p>交错并联PFC设计工具 v{__APP_VERSION__}</p>
         <p className="mt-1">基于 React + Vite + Tailwind CSS</p>
-        {/* ICP 备案号：工信部要求网站底部展示并链接至 beian.miit.gov.cn */}
-        <p className="mt-1">
+        {/* 备案信息：工信部（ICP 备案）与公安部（公安联网备案）均要求网站底部公开展示。
+            ICP 在前、公安图标居中、公安备案号在后，同一行排列（页脚整体居中）。
+            图标路径用相对 './'：同一份 dist 要同时服务自有域名根路径与 GitHub Pages
+            子路径，写成绝对 '/beian.png' 会在 Pages 子路径下 404。 */}
+        <p className="mt-1 flex flex-wrap items-center justify-center gap-x-2 gap-y-1">
           <a
             href="https://beian.miit.gov.cn/"
             target="_blank"
@@ -102,6 +105,15 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             className="transition-colors hover:text-foreground"
           >
             苏ICP备2026073104号-1
+          </a>
+          <a
+            href="https://beian.mps.gov.cn/#/query/webSearch?code=32021402005238"
+            target="_blank"
+            rel="noreferrer"
+            className="inline-flex items-center gap-1 transition-colors hover:text-foreground"
+          >
+            <img src="./beian.png" alt="" className="h-4 w-auto" />
+            苏公网安备32021402005238号
           </a>
         </p>
         {/* 免责声明：分「工程决策」与「知识产权」两段，与站群其余站点保持同一文本。
