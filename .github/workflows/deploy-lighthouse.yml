@@ -160,7 +160,7 @@ jobs:
           # 否则第一条命令失败就中止、后面的诊断全打不出来。
           set +e
           set -uo pipefail
-          DOMAIN=interleavedpfc.power-knowledge.tech
+          DOMAIN=www.interleavedpfc.power-knowledge.tech
           URL="https://$DOMAIN/"
           LIVE=/tmp/live.html
 
