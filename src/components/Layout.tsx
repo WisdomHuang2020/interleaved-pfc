@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
-import { Zap, BookOpen, Activity, PenTool, TrendingUp, Calculator, FileText, MessageSquare, Menu, X } from 'lucide-react'
+import { Zap, BookOpen, Activity, PenTool, TrendingUp, Calculator, FileText, MessageSquare, Menu, X, House } from 'lucide-react'
 import BrandMark from './BrandMark'
 
 const navItems = [
@@ -94,6 +94,19 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       <footer className="border-t border-border py-6 text-center text-sm text-muted-foreground">
         <p>交错并联PFC设计工具 v{__APP_VERSION__}</p>
         <p className="mt-1">基于 React + Vite + Tailwind CSS</p>
+        {/* 返回站群入口（2026-11-02 新增）：本站是 power-knowledge.tech 站群的子站。
+            图标用 `House` —— lucide-react 0.487 里 `Home` 已改名，写 `Home` 会构建失败。
+            本站页脚整体居中，故用 <p> 包裹以保持居中；配色沿用本站 token
+            （text-muted-foreground / hover:text-foreground），不新造颜色。 */}
+        <p className="mt-3">
+          <a
+            href="https://power-knowledge.tech/"
+            className="inline-flex items-center gap-2 rounded-lg border border-border bg-surface-elevated px-3.5 py-2 text-sm font-medium text-muted-foreground transition-colors hover:border-primary-light/50 hover:text-foreground"
+          >
+            <House className="h-4 w-4" />
+            返回站群入口
+          </a>
+        </p>
         {/* 备案信息：工信部（ICP 备案）与公安部（公安联网备案）均要求网站底部公开展示。
             ICP 在前、公安图标居中、公安备案号在后，同一行排列（页脚整体居中）。
             图标路径用相对 './'：同一份 dist 要同时服务自有域名根路径与 GitHub Pages
