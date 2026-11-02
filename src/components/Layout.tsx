@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
-import { Zap, BookOpen, Activity, PenTool, TrendingUp, Calculator, FileText, Menu, X } from 'lucide-react'
+import { Zap, BookOpen, Activity, PenTool, TrendingUp, Calculator, FileText, MessageSquare, Menu, X } from 'lucide-react'
 import BrandMark from './BrandMark'
 
 const navItems = [
@@ -11,6 +11,7 @@ const navItems = [
   { path: '/curves', label: '曲线', icon: TrendingUp },
   { path: '/designer', label: '设计', icon: Calculator },
   { path: '/report', label: '报告', icon: FileText },
+  { path: '/feedback', label: '留言', icon: MessageSquare },
 ]
 
 export default function Layout({ children }: { children: React.ReactNode }) {

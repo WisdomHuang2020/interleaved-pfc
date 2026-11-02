@@ -16,6 +16,9 @@ const Derivations = lazy(() => import('./pages/Derivations'))
 const Curves = lazy(() => import('./pages/Curves'))
 const Designer = lazy(() => import('./pages/Designer'))
 const Report = lazy(() => import('./pages/Report'))
+// 留言与后台同样按需加载：多数访问不会进后台，没必要进首屏包。
+const Feedback = lazy(() => import('./pages/Feedback'))
+const Admin = lazy(() => import('./pages/Admin'))
 
 // 兜底 UI 放在 Layout 内部，切换路由时导航壳保持可见，不会整页白屏。
 function RouteFallback() {
@@ -44,6 +47,10 @@ function App() {
               <Route path="/curves" element={<Curves />} />
               <Route path="/designer" element={<Designer />} />
               <Route path="/report" element={<Report />} />
+              <Route path="/feedback" element={<Feedback />} />
+              {/* 后台不进导航，仅直达 URL 访问。真正的边界在服务端（/api/admin/* 校验会话），
+                  前端隐藏路径只是不打扰读者。 */}
+              <Route path="/admin" element={<Admin />} />
             </Routes>
           </Suspense>
         </Layout>
