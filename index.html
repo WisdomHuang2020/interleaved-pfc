@@ -9,6 +9,17 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
     <!-- 勿在此引 KaTeX CDN：样式与 59 个字体现由 src/main.tsx 的 import 打包，重复引用只是白拉一遍。 -->
+    <!-- 首屏防闪：body 渲染前把上次选的主题盖到 <html> 上（规则须与 ThemeSwitcher.tsx 的 isThemeId 一致） -->
+    <script>
+      (function () {
+        var IDS = ['dark-teal', 'blue', 'navy-tech', 'graphite', 'warm-paper', 'forest', 'indigo', 'sea-salt']
+        try {
+          var q = new URLSearchParams(location.search).get('theme')
+          var v = IDS.indexOf(q) >= 0 ? q : localStorage.getItem('pk-theme')
+          if (IDS.indexOf(v) >= 0) document.documentElement.dataset.theme = v
+        } catch (e) {}
+      })()
+    </script>
   </head>
   <body>
     <div id="root"></div>

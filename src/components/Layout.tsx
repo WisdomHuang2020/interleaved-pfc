@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import ThemeSwitcher from './ThemeSwitcher'
 import { Link, useLocation } from 'react-router-dom'
 import { Zap, BookOpen, Activity, PenTool, TrendingUp, Calculator, FileText, MessageSquare, Menu, X, House } from 'lucide-react'
 import BrandMark from './BrandMark'
@@ -48,6 +49,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                 </Link>
               )
             })}
+            <ThemeSwitcher />
           </nav>
 
           {/* Mobile Menu Button */}
