@@ -49,6 +49,17 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                 </Link>
               )
             })}
+            {/* 站群入口（2026-11-10）：参照 control-mode / motor-lighting / english 三站，
+                房子图标 + 「站群入口」，放在页眉右侧主题切换器之前，链接总入口且不开新标签页。
+                页脚的「返回站群入口」保留不动。 */}
+            <a
+              href="https://power-knowledge.tech/"
+              className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+              title="返回 power-knowledge.tech 站群入口"
+            >
+              <House className="h-4 w-4" />
+              站群入口
+            </a>
             <ThemeSwitcher />
           </nav>
 
