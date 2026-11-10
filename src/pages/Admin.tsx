@@ -247,6 +247,8 @@ export default function Admin() {
     // 永远读到空字符串，确认框就不会出现。
     // eslint-disable-next-line react-hooks/exhaustive-deps -- closeSettings 由下面三个密码值决定；
     // 依赖数组刻意只列这三个值（见上方说明），加入函数本身会让监听器每次渲染都重建。
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- closeSettings 由下面三个密码值决定；
+    // 依赖数组刻意只列这三个值（见上方说明），加入函数本身会让监听器每次渲染都重建。
   }, [settingsOpen, curPass, newPass, confirmPass])
 
   // 关闭设置弹层。
