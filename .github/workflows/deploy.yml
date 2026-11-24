@@ -9,6 +9,10 @@ permissions:
   contents: read
   pages: write
   id-token: write
+  # 2026-11-24 补：deploy-pages 需要读取本次 run 的 artifact 元数据。
+  # 显式声明 permissions 时未列出的权限会被置为 none，缺失时
+  # deploy-pages 只能报 "No artifacts named github-pages were found"。
+  actions: read
 
 concurrency:
   group: "pages"
@@ -46,16 +50,23 @@ jobs:
       - name: Build
         run: npm run build
 
+      # 2026-11-24 升级：原 v4/v3 版本落后一个大版本，deploy-pages 的
+      # api-client 取 artifact 元数据时持续报 "No artifacts named github-pages
+      # were found"（artifact 实际每次都上传成功）。v5 系列原生跑 node24，
+      # 且新增 artifact_name 输入，这里与上传侧显式对齐名称，消除歧义。
       - name: Setup Pages
-        uses: actions/configure-pages@v4
+        uses: actions/configure-pages@v6
         with:
           enablement: true
 
       - name: Upload artifact
-        uses: actions/upload-pages-artifact@v3
+        uses: actions/upload-pages-artifact@v5
         with:
           path: './dist'
+          name: github-pages
 
       - name: Deploy to GitHub Pages
         id: deployment
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@v5
+        with:
+          artifact_name: github-pages
