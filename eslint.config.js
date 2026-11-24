@@ -7,10 +7,13 @@ import pluginReactRefresh from "eslint-plugin-react-refresh";
 
 /** @type {import('eslint').Linter.Config[]} */
 export default [
-  // 全局忽略：构建产物与编辑器配置不在源码管辖范围内。
+  // 全局忽略：构建产物、编辑器配置与工作区运维数据不在源码管辖范围内。
   // eslint 9 的 flat config 默认只忽略 node_modules，dist/ 必须显式忽略，
   // 否则会把压缩后的 bundle 当源码逐行报错（历史上单次报出 2539 条）。
-  { ignores: ["dist/**", ".vscode/**"] },
+  // .workbuddy/tools/ 下是 TAT 运维通道的 Node 脚本（用 process / Buffer），
+  // 本项目 languageOptions.globals 是 browser，扫描它们会报 19 条 no-undef；
+  // 这些脚本不进 bundle、不属于前端源码，故整目录排除。
+  { ignores: ["dist/**", ".vscode/**", ".workbuddy/**"] },
   {files: ["**/*.{js,mjs,cjs,ts,jsx,tsx}"]},
   {languageOptions: { globals: globals.browser }},
   {settings: { react: { version: "detect" } }},

@@ -1,13 +1,14 @@
 import { useState } from 'react'
 import ThemeSwitcher from './ThemeSwitcher'
 import { Link, useLocation } from 'react-router-dom'
-import { Zap, BookOpen, Activity, PenTool, TrendingUp, Calculator, FileText, MessageSquare, Menu, X, House } from 'lucide-react'
+import { Zap, BookOpen, Activity, PenTool, TrendingUp, Calculator, FileText, MessageSquare, Menu, X, House, Timer } from 'lucide-react'
 import BrandMark from './BrandMark'
 
 const navItems = [
   { path: '/', label: '首页', icon: Zap },
   { path: '/fundamentals', label: '基础', icon: BookOpen },
   { path: '/operation', label: '原理', icon: Activity },
+  { path: '/crm', label: 'CRM', icon: Timer },
   { path: '/derivations', label: '推导', icon: PenTool },
   { path: '/curves', label: '曲线', icon: TrendingUp },
   { path: '/designer', label: '设计', icon: Calculator },

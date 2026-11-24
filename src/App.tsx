@@ -7,11 +7,13 @@ import { DesignProvider } from './lib/DesignContext'
 // 对它做懒加载只会多一次请求瀑布与 Suspense 闪烁，收益为负。
 import Home from './pages/Home'
 
-// 其余 6 个页面按路由懒加载（React.lazy 要求目标模块有 default export，已核实全部满足）。
+// 其余页面按路由懒加载（React.lazy 要求目标模块有 default export，已核实全部满足）。
 // 目的：把首屏用不到的重库移出入口 chunk——
-//   recharts 仅 Curves 使用；katex（经 InlineMath / MathBlock）仅 Fundamentals / Operation / Derivations 使用。
+//   recharts 仅 Curves / CRM 使用；katex（经 InlineMath / MathBlock）仅 Fundamentals / Operation /
+//   Derivations / CRM 使用。
 const Fundamentals = lazy(() => import('./pages/Fundamentals'))
 const Operation = lazy(() => import('./pages/Operation'))
+const CRM = lazy(() => import('./pages/CRM'))
 const Derivations = lazy(() => import('./pages/Derivations'))
 const Curves = lazy(() => import('./pages/Curves'))
 const Designer = lazy(() => import('./pages/Designer'))
@@ -43,6 +45,7 @@ function App() {
               <Route path="/" element={<Home />} />
               <Route path="/fundamentals" element={<Fundamentals />} />
               <Route path="/operation" element={<Operation />} />
+              <Route path="/crm" element={<CRM />} />
               <Route path="/derivations" element={<Derivations />} />
               <Route path="/curves" element={<Curves />} />
               <Route path="/designer" element={<Designer />} />
