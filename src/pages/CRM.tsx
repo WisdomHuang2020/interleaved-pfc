@@ -42,7 +42,7 @@ export default function CRM() {
     <div className="space-y-6">
       <div className="flex items-center gap-3">
         <Activity className="h-6 w-6 text-primary" />
-        <h1 className="text-3xl font-bold">CRM 临界导通模式</h1>
+        <h1 className="text-3xl font-bold">工作模式：临界导通（CRM / BCM）</h1>
       </div>
 
       <div className="rounded-lg border border-primary-light/30 bg-primary-dark/10 p-4 text-sm leading-relaxed text-muted-foreground">
@@ -54,6 +54,22 @@ export default function CRM() {
           （电感量是输入、开关频率是输出）。CCM 的纹波式{' '}
           <InlineMath latex="\Delta I_L = v_{in}D/(Lf_{sw})" /> 在 CRM 下不成立，两套公式不可互套。
         </p>
+      </div>
+
+      {/* 术语对照：BCM 与 CRM 同义，TM 是另一族，避免读者按 TM 去查临界导通的资料。 */}
+      <div className="rounded-lg border border-border bg-card p-4 text-sm leading-relaxed">
+        <h2 className="mb-2 text-sm font-semibold text-foreground">术语对照</h2>
+        <ul className="space-y-2 text-muted-foreground">
+          <li>
+            <strong className="text-foreground">CRM</strong>（Critical Conduction Mode）与{' '}
+            <strong className="text-foreground">BCM</strong>（Boundary Conduction Mode）
+            <span className="text-xs"> —— 同一事物的两种文献写法，中文亦称「临界导通模式」或「临界断续模式」。本站统一用「临界导通（CRM / BCM）」。</span>
+          </li>
+          <li>
+            <strong className="text-foreground">TM</strong>（Transition Mode，过渡 / 谐振模式）
+            <span className="text-xs"> —— 与上面<strong className="text-foreground">不是同一族</strong>：TM 靠谐振腔实现软开关，开关频率可低于谐振频率，电感电流双向谐振。本站论文库中的《Boost PFC 变换器的 ZCS 谐振软开关技术研究》《交错并联 PFC 中 ZCS 开关谐振变换器研究》属于 TM 范畴，与本页的临界导通不可混谈。</span>
+          </li>
+        </ul>
       </div>
 
       {/* ============ 理论 ============ */}

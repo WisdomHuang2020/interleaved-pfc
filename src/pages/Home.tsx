@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { Zap, BookOpen, Activity, SlidersHorizontal, TrendingUp, PenTool, FileText, ArrowRight } from 'lucide-react'
+import { Zap, BookOpen, Activity, SlidersHorizontal, TrendingUp, PenTool, FileText, ArrowRight, Timer } from 'lucide-react'
 import InterleaveAnimation from '../components/InterleaveAnimation'
 
 const features = [
@@ -35,6 +35,14 @@ const features = [
     path: '/curves',
     color: 'text-amber-400',
     bg: 'bg-amber-400/10',
+  },
+  {
+    icon: Timer,
+    title: '工作模式',
+    description: '临界导通 CRM / BCM：恒导通时间、变频特性、两相同步，以及 19 项工程案例校验。',
+    path: '/crm',
+    color: 'text-teal-400',
+    bg: 'bg-teal-400/10',
   },
   {
     icon: SlidersHorizontal,

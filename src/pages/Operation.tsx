@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Activity } from 'lucide-react'
 import CollapsibleSection from '../components/CollapsibleSection'
 import InlineMath from '../components/InlineMath'
+import { CCMModeNotice, ScopeBadge } from '../components/ModeScope'
 
 /** 四种开关模态 */
 const modes = [
@@ -68,8 +69,10 @@ export default function Operation() {
         形成四种工作模态的组合。理解各模态的电流路径是分析纹波、损耗与控制的基础。
       </p>
 
+      <CCMModeNotice what="的时序与模态分析" />
+
       {/* 单相 Boost 基础 */}
-      <CollapsibleSection title="1. 单相 Boost 的两个开关阶段" defaultOpen={true}>
+      <CollapsibleSection title={<>1. 单相 Boost 的两个开关阶段<ScopeBadge scope="general" /></>} defaultOpen={true}>
         <div className="space-y-4 text-muted-foreground leading-relaxed">
           <div className="grid gap-4 md:grid-cols-2">
             <div className="rounded-lg border border-border bg-card p-4">
@@ -109,10 +112,16 @@ export default function Operation() {
       </CollapsibleSection>
 
       {/* 交错时序 */}
-      <CollapsibleSection title="2. 两相交错的驱动时序" defaultOpen={true}>
+      <CollapsibleSection title={<>2. 两相交错的驱动时序<ScopeBadge scope="ccm" /></>} defaultOpen={true}>
         <div className="space-y-4 text-muted-foreground leading-relaxed">
           <p>
             两相驱动信号 G1、G2 频率相同、相位差 180°。占空比不同，一个周期内的模态序列也不同：
+          </p>
+          <p className="rounded-lg border border-amber-400/30 bg-amber-400/10 p-3 text-xs">
+            <strong className="text-amber-400">为什么是 CCM 专属：</strong>
+            这里假设两相共用一个时钟、由同步 PWM 驱动。临界导通 CRM / BCM 下没有公共时钟——
+            每相由各自的零电流检测（ZCD）信号触发开通，相位不再严格固定，
+            模态 C / D 的出现时刻也随之变化。详见「模式」页第 4 节。
           </p>
           <div className="grid gap-4 md:grid-cols-2 text-sm">
             <div className="rounded-lg border border-border bg-card p-4">
@@ -150,7 +159,7 @@ export default function Operation() {
       </CollapsibleSection>
 
       {/* 四种模态交互 */}
-      <CollapsibleSection title="3. 四种工作模态（点击切换）" defaultOpen={true}>
+      <CollapsibleSection title={<>3. 四种工作模态（点击切换）<ScopeBadge scope="general" /></>} defaultOpen={true}>
         <div className="space-y-4">
           <div className="flex flex-wrap gap-2">
             {modes.map((mm, i) => (
@@ -194,7 +203,7 @@ export default function Operation() {
       </CollapsibleSection>
 
       {/* 工频周期 */}
-      <CollapsibleSection title="4. 工频周期内的占空比变化">
+      <CollapsibleSection title={<>4. 工频周期内的占空比变化<ScopeBadge scope="general" /></>}>
         <div className="space-y-4 text-muted-foreground leading-relaxed">
           <p>
             PFC 与固定占空比 DC-DC 的本质区别：占空比随整流后的正弦电压实时变化

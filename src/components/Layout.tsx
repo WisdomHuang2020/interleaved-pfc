@@ -8,7 +8,7 @@ const navItems = [
   { path: '/', label: '首页', icon: Zap },
   { path: '/fundamentals', label: '基础', icon: BookOpen },
   { path: '/operation', label: '原理', icon: Activity },
-  { path: '/crm', label: 'CRM', icon: Timer },
+  { path: '/crm', label: '模式', icon: Timer },
   { path: '/derivations', label: '推导', icon: PenTool },
   { path: '/curves', label: '曲线', icon: TrendingUp },
   { path: '/designer', label: '设计', icon: Calculator },

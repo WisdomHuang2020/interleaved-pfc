@@ -2,7 +2,8 @@ import { useState } from 'react'
 import { ChevronDown, ChevronUp } from 'lucide-react'
 
 interface SectionProps {
-  title: string
+  /** 标题。允许传入节点，以便在标题旁挂适用范围徽标（见 ModeScope.tsx）。 */
+  title: React.ReactNode
   children: React.ReactNode
   defaultOpen?: boolean
 }

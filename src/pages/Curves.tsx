@@ -11,6 +11,7 @@ import {
   AreaChart,
   Area,
 } from 'recharts'
+import { CCMModeNotice } from '../components/ModeScope'
 
 type CurveType = 'ripple' | 'thd' | 'efficiency' | 'inductor'
 
@@ -134,6 +135,8 @@ export default function Curves() {
         <TrendingUp className="h-6 w-6 text-primary" />
         <h1 className="text-3xl font-bold">特性曲线</h1>
       </div>
+
+      <CCMModeNotice what="的全部曲线" />
 
       <div className="flex flex-wrap gap-2">
         {curveConfigs.map((c) => (

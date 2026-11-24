@@ -2,6 +2,7 @@ import { PenTool } from 'lucide-react'
 import CollapsibleSection from '../components/CollapsibleSection'
 import MathBlock from '../components/MathBlock'
 import InlineMath from '../components/InlineMath'
+import { CCMModeNotice, ScopeBadge } from '../components/ModeScope'
 
 export default function Derivations() {
   return (
@@ -16,8 +17,10 @@ export default function Derivations() {
         从伏秒平衡出发，逐步得到电感、电容、纹波抵消系数与损耗估算的设计式。
       </p>
 
+      <CCMModeNotice what="的设计式" />
+
       {/* 1. Boost 基本关系 */}
-      <CollapsibleSection title="1. Boost 基本关系与占空比" defaultOpen={true}>
+      <CollapsibleSection title={<>1. Boost 基本关系与占空比<ScopeBadge scope="general" /></>} defaultOpen={true}>
         <div className="space-y-2 text-muted-foreground leading-relaxed">
           <p>稳态下电感在一个开关周期内伏秒平衡（平均电压为零）：</p>
           <MathBlock stepNumber={1} label="伏秒平衡" latex="v_{in} \cdot D T_s + (v_{in} - V_{out})(1-D) T_s = 0" />
@@ -34,7 +37,7 @@ export default function Derivations() {
       </CollapsibleSection>
 
       {/* 2. 电感电流纹波 */}
-      <CollapsibleSection title="2. 电感电流纹波推导" defaultOpen={true}>
+      <CollapsibleSection title={<>2. 电感电流纹波推导<ScopeBadge scope="ccm" /></>} defaultOpen={true}>
         <div className="space-y-2 text-muted-foreground leading-relaxed">
           <p>开关导通期间（DTs），电感电压为 vin，电流线性上升，峰峰纹波：</p>
           <MathBlock stepNumber={1} label="纹波定义" latex="\Delta I_L = \frac{v_{in} \cdot D T_s}{L} = \frac{v_{in} \cdot D}{L \cdot f_{sw}}" />
@@ -54,7 +57,7 @@ export default function Derivations() {
       </CollapsibleSection>
 
       {/* 3. 纹波抵消系数 */}
-      <CollapsibleSection title="3. N 相纹波抵消系数 R(D, N)" defaultOpen={true}>
+      <CollapsibleSection title={<>3. N 相纹波抵消系数 R(D, N)<ScopeBadge scope="ccm" /></>} defaultOpen={true}>
         <div className="space-y-2 text-muted-foreground leading-relaxed">
           <p>
             以 N = 2 为例。两相电流纹波幅值相同、相位错开 Ts/2。
@@ -88,7 +91,7 @@ export default function Derivations() {
       </CollapsibleSection>
 
       {/* 4. 电感设计 */}
-      <CollapsibleSection title="4. Boost 电感设计">
+      <CollapsibleSection title={<>4. Boost 电感设计<ScopeBadge scope="ccm" /></>}>
         <div className="space-y-2 text-muted-foreground leading-relaxed">
           <p>
             给定每相允许纹波率 <InlineMath latex="r = \Delta I_L / I_{L,pk}" />（常取 0.2~0.4）：
@@ -107,7 +110,7 @@ export default function Derivations() {
       </CollapsibleSection>
 
       {/* 5. 输出电容 */}
-      <CollapsibleSection title="5. 输出电容设计（能量法）">
+      <CollapsibleSection title={<>5. 输出电容设计（能量法）<ScopeBadge scope="general" /></>}>
         <div className="space-y-2 text-muted-foreground leading-relaxed">
           <p>PFC 输入瞬时功率以 2 倍工频脉动：</p>
           <MathBlock stepNumber={1} label="脉动功率" latex="p_{in}(t) = V_m I_m \sin^2\omega t = P_{in}\left(1 - \cos 2\omega t\right)" />
@@ -143,7 +146,7 @@ export default function Derivations() {
       </CollapsibleSection>
 
       {/* 6. THD */}
-      <CollapsibleSection title="6. 输入电流 THD 估算">
+      <CollapsibleSection title={<>6. 输入电流 THD 估算<ScopeBadge scope="ccm" /></>}>
         <div className="space-y-2 text-muted-foreground leading-relaxed">
           <p>电流控制理想时，输入电流畸变主要来自开关频率纹波。三角纹波电流有效值：</p>
           <MathBlock stepNumber={1} label="纹波有效值" latex="\Delta I_{L,rms} = \frac{\Delta I_L}{2\sqrt{3}}" />
@@ -157,8 +160,15 @@ export default function Derivations() {
       </CollapsibleSection>
 
       {/* 7. 损耗与效率 */}
-      <CollapsibleSection title="7. 损耗分解与效率估算">
+      <CollapsibleSection title={<>7. 损耗分解与效率估算<ScopeBadge scope="general" /></>}>
         <div className="space-y-2 text-muted-foreground leading-relaxed">
+          <p className="rounded-lg border border-amber-400/30 bg-amber-400/10 p-3 text-xs">
+            <strong className="text-amber-400">适用范围：</strong>
+            损耗分项的<strong className="text-foreground">框架</strong>（I²R、开关损耗、电感损耗）
+            对各模式通用，但下面写出的 RMS 表达式是以 CCM 的「纹波远小于平均值」前提简化的。
+            CRM / BCM 下电感电流是三角波，纹波与平均值同量级，必须改用「模式」页给出的
+            <InlineMath latex="I_{L,rms}=I_{L,pk}/\sqrt{6}" /> 等式，不能直接套用本页的近似式。
+          </p>
           <p>每相 MOSFET 导通损耗（RDS(on) 随温度升高，按 100°C 估算）。当纹波较小（ΔIL ≪ IL,avg）时可用近似式；纹波较大时须用精确式：</p>
           <MathBlock stepNumber={1} label="开关导通损耗" latex="P_{cond,S} = I_{S,rms}^2 \cdot R_{ds(on)}, \qquad I_{S,rms} = \sqrt{D\left(I_{L,avg}^2 + \frac{\Delta I_L^2}{12}\right)} \approx I_{L,avg}\sqrt{D}" />
           <MathBlock stepNumber={2} label="开关损耗" latex="P_{sw} = \frac{1}{2} V_{out} I_{L} (t_r + t_f) f_{sw} + E_{oss} f_{sw}" />

@@ -2,6 +2,7 @@ import { Suspense, lazy } from 'react'
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import Layout from './components/Layout'
 import { DesignProvider } from './lib/DesignContext'
+import { resolveBasename } from './lib/sitePath'
 
 // 首页保持静态导入：它是落地页、也是绝大多数访问的入口路径，
 // 对它做懒加载只会多一次请求瀑布与 Suspense 闪烁，收益为负。
@@ -38,7 +39,10 @@ function RouteFallback() {
 function App() {
   return (
     <DesignProvider>
-      <BrowserRouter>
+      {/* basename 按运行时路径判定：正式站在根路径（空 basename），
+          GitHub Pages 在子路径 /interleaved-pfc（需前缀，否则深链接只渲染首页）。
+          详见 lib/sitePath.ts。 */}
+      <BrowserRouter basename={resolveBasename(window.location.pathname)}>
         <Layout>
           <Suspense fallback={<RouteFallback />}>
             <Routes>
