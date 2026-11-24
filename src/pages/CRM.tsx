@@ -3,6 +3,14 @@ import { Link } from 'react-router-dom'
 import CollapsibleSection from '../components/CollapsibleSection'
 import MathBlock from '../components/MathBlock'
 import InlineMath from '../components/InlineMath'
+import {
+  ConductionModeCompare,
+  CrmSinglePhaseWaveform,
+  ConstantOnTimeWaveform,
+  FrequencyVsTheta,
+  TwoPhaseInterleave,
+  ZcdControlBlock,
+} from '../components/crm/CrmFigures'
 
 /**
  * 临界导通模式（CRM / BCM）专题页。
@@ -80,6 +88,7 @@ export default function CRM() {
             亦称 BCM / 边界模式）。CRM 的定义是：<strong className="text-foreground">电感电流下降到零的瞬间，开关管立即导通</strong>
             ，因此电感电流是紧贴横轴的三角波，峰值恰为开关周期平均值的 2 倍。
           </p>
+          <ConductionModeCompare />
           <MathBlock stepNumber={1} label="CRM 电流关系" latex="I_{L,pk}(\theta) = 2\,I_{L,avg}(\theta), \qquad \Delta I_L = I_{L,avg}" />
           <p>由此得到两项关键收益与一项代价：</p>
           <div className="grid gap-3 md:grid-cols-3">
@@ -96,6 +105,7 @@ export default function CRM() {
               <p>峰值是平均值的 2 倍，器件电流应力与 EMI 滤波器压力上升，单相互配合中小功率。</p>
             </div>
           </div>
+          <CrmSinglePhaseWaveform />
           <p className="text-xs">
             依据：王颖《单相 CRM 交错并联高功率因数整流器研究》1.1.3 / 摘要；王艳硕《交错并联 Boost PFC 技术的研究》2.1；
             方孝杰《基于交错并联控制的 Boost PFC 的研究》1.3；姚国斌《基于交错并联拓扑的 DCM Boost PFC 技术研究》2.2。
@@ -115,6 +125,7 @@ export default function CRM() {
           <p>导通与关断时间由电感伏秒关系给出，导通时间中 <InlineMath latex="\sin\theta" /> 恰好消去：</p>
           <MathBlock stepNumber={2} label="恒定导通时间" latex="T_{on} = \frac{L\,I_{L,pk}}{v(\theta)} = \frac{2LP_{in}}{N V_{ac}^{2}} \quad (\text{与 }\theta\text{ 无关})" />
           <MathBlock stepNumber={3} label="关断时间" latex="T_{off} = \frac{L\,I_{L,pk}}{V_o - v(\theta)} = T_{on}\frac{v(\theta)}{V_o-v(\theta)}" />
+          <ConstantOnTimeWaveform />
           <p>两式相加取倒数，得变频规律：</p>
           <MathBlock stepNumber={4} label="CRM 频率" latex="f(\theta) = \frac{1}{T_{on}+T_{off}} = \frac{N V_{ac}^{2}\left(V_o - \sqrt{2}V_{ac}\sin\theta\right)}{2 L P_{in} V_o}" />
           <p>反过来，给定允许的最低频率可反解电感：</p>
@@ -128,19 +139,26 @@ export default function CRM() {
         </div>
       </CollapsibleSection>
 
-      <CollapsibleSection title="3. 频率随工频相位的变化与奇点">
+      <CollapsibleSection title="3. 频率随工频相位的变化与奇点" defaultOpen={true}>
         <div className="space-y-3 text-sm leading-relaxed text-muted-foreground">
           <p>
             上式表明 <InlineMath latex="f" /> 随 <InlineMath latex="\sin\theta" /> 增大而单调下降：
-            波峰处频率最低，过零点附近 <InlineMath latex="v\to0" /> 时{' '}
-            <InlineMath latex="T_{off}\to0" />、<InlineMath latex="f\to\infty" />。
-            这是理想模型的奇点，不是实际工作点——真实控制器会用最高频率钳位、最小导通时间
-            或轻载切相来限制它，EMI 滤波器也必须按最宽频率范围设计。
+            波峰处频率最低。反方向则相反——<InlineMath latex="\theta\to0" /> 或 <InlineMath latex="180^\circ" /> 时{' '}
+            <InlineMath latex="v\to0" /> 使 <InlineMath latex="T_{off}\to0" />，但{' '}
+            <InlineMath latex="T_{on}" /> 不变，所以 <InlineMath latex="f" /> 逼近上限{' '}
+            <InlineMath latex="1/T_{on}" />（<strong className="text-foreground">不是无穷大</strong>）。
+            这个上限本身随输入电压变化：案例下 120 V 约 105 kHz（波峰 63.7 kHz 的 1.7 倍），
+            277 V 约 561 kHz（49.9 kHz 的 <strong className="text-foreground">11 倍</strong>）。
+            换言之<strong className="text-foreground">高压输入才是频率跨度最大、最难设计的工况</strong>。
+            真实控制器还要叠加最小导通时间与 ZCD 延时，实际最高频率会更高，
+            因此工程上仍需最高频率钳位或轻载切相，EMI 滤波器也必须按最宽频率范围设计。
           </p>
+          <FrequencyVsTheta />
           <p>
             输入电压升高时 <InlineMath latex="V_{ac}^{2}" /> 增大但{' '}
             <InlineMath latex="(V_o-\sqrt{2}V_{ac})" /> 减小，两者竞争，频率并非单调随电压变化。
-            本页计算器对整个输入范围与半个工频周期做二维扫描，给出真正的最低频率及其出现位置。
+            「设计」页的 CRM 计算器对整个输入范围与半个工频周期做二维扫描，
+            给出真正的最低频率及其出现位置。
           </p>
           <p className="text-xs">
             依据：任玉伟 2.2.2「开关频率的变化特性」、5.3 实测（负载越小频率越高）；方孝杰 2.2 / 4 章；
@@ -149,7 +167,7 @@ export default function CRM() {
         </div>
       </CollapsibleSection>
 
-      <CollapsibleSection title="4. 两相交错的同步：相位从哪来">
+      <CollapsibleSection title="4. 两相交错的同步：相位从哪来" defaultOpen={true}>
         <div className="space-y-3 text-sm leading-relaxed text-muted-foreground">
           <p>
             CRM 没有全局时钟，各相靠<strong className="text-foreground">零电流检测（ZCD）</strong>
@@ -158,6 +176,7 @@ export default function CRM() {
             两相即 <InlineMath latex="180^\circ" />。难点在于 <InlineMath latex="T_s" />{' '}
             随工频相位与负载不断变化，延时量也必须每个周期重算。
           </p>
+          <ZcdControlBlock />
           <div className="grid gap-3 md:grid-cols-3">
             <div className="rounded-lg border border-border bg-card p-3">
               <p className="mb-1 font-semibold text-foreground">开环主从</p>
@@ -173,10 +192,13 @@ export default function CRM() {
             </div>
           </div>
           <p>
-            相位准确时，合成输入电流纹波频率变为单相的 N 倍、幅值显著下降；
-            在 <InlineMath latex="D=0.5" /> 附近两相反向斜率可完全抵消（详见「推导」页的{' '}
-            <InlineMath latex="R(D,N)=|ND-k|" />）。
+            相位准确时，合成输入电流纹波频率变为单相的 N 倍、幅值显著下降。
+            但要注意边界：「推导」页的 <InlineMath latex="R(D,N)=|ND-k|" /> 是按{' '}
+            <strong className="text-foreground">CCM 同步 PWM</strong> 推出来的，
+            CRM 下两相相位靠自然交错维持、并非严格锁定，抵消程度达不到该式的理想值。
+            下图是按本页 CRM 模型逐点相加算出的实际波形。
           </p>
+          <TwoPhaseInterleave />
           <p className="text-xs">
             依据：任玉伟 3.3（开环主从 / PLL / 新型交错，并给出 UCC28061 的 100–1000W 定位与相位管理）、
             方孝杰 3 章（精确 180° 移相电路与 TMS320F2812 软件延时法）、王颖 5 章（三路移相 π/3、2π/3）、
