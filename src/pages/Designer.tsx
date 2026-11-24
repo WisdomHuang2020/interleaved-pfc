@@ -12,6 +12,7 @@ import {
 } from 'lucide-react'
 import { calculateDesign } from '../lib/pfcCalc'
 import type { DesignInput } from '../lib/pfcCalc'
+import CRMCalculator from '../components/CRMCalculator'
 
 const fadeUp = {
   hidden: { opacity: 0, y: 20 },
@@ -24,7 +25,8 @@ const fadeUp = {
 
 export default function Designer() {
   const { spec, setSpec, results, setResults } = useDesign()
-  
+  const [calcMode, setCalcMode] = useState<'ccm' | 'crm'>('ccm')
+
   const [input, setInput] = useState<DesignInput>({
     vinMin: spec.vinMin,
     vinMax: spec.vinMax,
@@ -106,11 +108,40 @@ export default function Designer() {
           </h1>
         </div>
         <p className="text-text-secondary max-w-2xl">
-          输入电气规格，自动计算交错并联PFC的关键参数，包括Boost电感、电流纹波、THD与效率。
+          按工作模式计算交错并联 PFC 的关键参数：CCM 定频给出电感、纹波、THD 与损耗；
+          CRM 临界导通给出电感、变频范围与器件应力。
         </p>
       </motion.div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="mb-6 flex flex-wrap items-center gap-2">
+        <span className="text-sm text-text-muted">工作模式</span>
+        <button
+          onClick={() => setCalcMode('ccm')}
+          className={`rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
+            calcMode === 'ccm'
+              ? 'bg-primary text-primary-foreground'
+              : 'bg-muted text-muted-foreground hover:bg-muted/70'
+          }`}
+        >
+          CCM 定频
+        </button>
+        <button
+          onClick={() => setCalcMode('crm')}
+          className={`rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
+            calcMode === 'crm'
+              ? 'bg-primary text-primary-foreground'
+              : 'bg-muted text-muted-foreground hover:bg-muted/70'
+          }`}
+        >
+          CRM 临界导通
+        </button>
+        <span className="ml-2 text-xs text-text-muted">
+          两种模式公式不同，不可互套；CRM 理论见「CRM」页
+        </span>
+      </div>
+
+      {calcMode === 'ccm' ? (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Input Panel */}
         <motion.div
           initial="hidden"
@@ -467,7 +498,10 @@ export default function Designer() {
             )}
           </div>
         </motion.div>
-      </div>
+        </div>
+      ) : (
+        <CRMCalculator />
+      )}
     </div>
   )
 }
